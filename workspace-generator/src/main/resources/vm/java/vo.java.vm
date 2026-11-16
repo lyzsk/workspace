@@ -1,0 +1,36 @@
+package ${packageName}.model.vo;
+
+import ${packageName}.entity.${ClassName};
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+@Data
+public class ${ClassName}VO {
+
+    private String id;
+#foreach($column in $columns)
+    private ${column.javaType} ${column.name};
+#end
+    private LocalDateTime createTime;
+    private String remark;
+
+    public static ${ClassName}VO from(${ClassName} entity) {
+        ${ClassName}VO vo = new ${ClassName}VO();
+        vo.setId(entity.getId() == null ? null : entity.getId().toString());
+#foreach($column in $columns)
+        vo.set${column.name.substring(0,1).toUpperCase()}${column.name.substring(1)}(entity.get${column.name.substring(0,1).toUpperCase()}${column.name.substring(1)}());
+#end
+        vo.setCreateTime(entity.getCreateTime());
+        vo.setRemark(entity.getRemark());
+        return vo;
+    }
+}

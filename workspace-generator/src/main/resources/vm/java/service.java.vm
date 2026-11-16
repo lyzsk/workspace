@@ -1,0 +1,24 @@
+package ${packageName}.service;
+
+import cn.sichu.common.result.PageResult;
+import ${packageName}.model.form.${ClassName}Form;
+import ${packageName}.model.query.${ClassName}Query;
+import ${packageName}.model.vo.${ClassName}VO;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+public interface I${ClassName}Service {
+
+    PageResult<${ClassName}VO> page(${ClassName}Query query);
+
+    ${ClassName}VO get(Long id);
+
+    Long create(${ClassName}Form form);
+
+    void update(Long id, ${ClassName}Form form);
+
+    void delete(Long id);
+}

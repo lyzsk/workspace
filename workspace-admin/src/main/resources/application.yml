@@ -1,0 +1,80 @@
+project:
+  name: workspace
+  version: @project.version@
+
+workspace:
+  snowflake:
+    worker-id: ${WORKER_ID:0}
+    datacenter-id: ${DATACENTER_ID:0}
+  jwt:
+    secret: ${JWT_SECRET:dev-only-workspace-secret-0123456789abcdef}
+    issuer: workspace
+    access-token-ttl: 30m
+  eap-tool-service:
+    ui-url: ${EAP_TOOL_SERVICE_UI_URL:/eap/}
+    ticket-secret: ${EAP_TOOL_SERVICE_TICKET_SECRET:dev-only-eap-tool-service-ticket-secret-0123456789abcdef}
+    issuer: workspace
+    audience: eap-tool-service
+    ticket-ttl: 60s
+  generator:
+    enabled: false
+  login:
+    max-fail-count: 5
+    lock-minutes: 15
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  api-doc:
+    enabled: ${API_DOC_ENABLED:false}
+    title: Workspace API
+    version: 1.0.0
+    server-url: /
+
+springdoc:
+  default-flat-param-object: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+knife4j:
+  enable: true
+  production: ${KNIFE4J_PRODUCTION:true}
+  setting:
+    language: zh_cn
+    enable-footer: false
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  application:
+    name: workspace-admin
+  quartz:
+    job-store-type: memory
+  datasource:
+    url: jdbc:postgresql://localhost:5432/workspace?currentSchema=system
+    username: workspace
+    password: workspace
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: system
+    user: ${DB_MIGRATION_USERNAME:workspace}
+    password: ${DB_MIGRATION_PASSWORD:workspace}
+    baseline-on-migrate: true
+    baseline-version: 1
+
+server:
+  port: 61114
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+
+logging:
+  level:
+    cn.sichu: info

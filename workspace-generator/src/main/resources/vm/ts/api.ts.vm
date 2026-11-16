@@ -1,0 +1,23 @@
+import { request } from "@/utils/http";
+import type { PageResult } from "@/types/system";
+import type { ${ClassName}Form, ${ClassName}Row } from "@/types/${moduleName}/${businessName}";
+
+export function page${ClassName}s(params: Record<string, unknown>) {
+    return request<PageResult<${ClassName}Row>>({
+        url: "/${moduleName}/${businessName}",
+        method: "get",
+        params,
+    });
+}
+
+export function create${ClassName}(data: ${ClassName}Form) {
+    return request<string>({ url: "/${moduleName}/${businessName}", method: "post", data });
+}
+
+export function update${ClassName}(id: string, data: ${ClassName}Form) {
+    return request<void>({ url: `/${moduleName}/${businessName}/${"$"}{id}`, method: "put", data });
+}
+
+export function delete${ClassName}(id: string) {
+    return request<void>({ url: `/${moduleName}/${businessName}/${"$"}{id}`, method: "delete" });
+}

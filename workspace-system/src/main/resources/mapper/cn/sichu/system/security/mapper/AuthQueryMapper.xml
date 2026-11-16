@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sichu.system.security.mapper.AuthQueryMapper">
+
+    <select id="selectRoleCodes" resultType="java.lang.String">
+        SELECT r.role_code
+        FROM sys_role r
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        WHERE ur.user_id = #{userId}
+        AND r.is_deleted = 0
+        AND r.status = 1
+    </select>
+
+    <select id="selectPermissions" resultType="java.lang.String">
+        SELECT DISTINCT m.permission
+        FROM sys_menu m
+        JOIN sys_role_menu rm ON rm.menu_id = m.id AND rm.is_deleted = 0
+        JOIN sys_role r ON r.id = rm.role_id AND r.is_deleted = 0 AND r.status = 1
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        WHERE ur.user_id = #{userId}
+        AND m.is_deleted = 0
+        AND m.status = 1
+        AND m.permission IS NOT NULL
+        AND m.permission &lt;&gt; ''
+    </select>
+
+    <select id="selectUserOrg" resultType="cn.sichu.system.auth.model.vo.UserOrgVO">
+        SELECT t.name AS "tenantName", d.dept_name AS "deptName"
+        FROM sys_user u
+        LEFT JOIN sys_tenant t ON t.id = u.tenant_id AND t.is_deleted = 0
+        LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.is_deleted = 0
+        WHERE u.id = #{userId}
+        AND u.is_deleted = 0
+    </select>
+
+</mapper>

@@ -1,0 +1,137 @@
+<template>
+    <div class="system-page">
+        <TableCard @refresh="load">
+            <template #actions>
+                <el-button v-permission="'${permissionPrefix}:create'" type="primary" @click="openCreate">
+                    新增${functionName}
+                </el-button>
+            </template>
+            <template #default="{ stripe, border, headerBackground, size }">
+                <Table
+                    v-loading="loading"
+                    :data="rows"
+                    :stripe="stripe"
+                    :border="border"
+                    :class="[`table-size-${"$"}{size}`, { 'no-header-bg': !headerBackground }]"
+                >
+#foreach($column in $columns)
+                    <el-table-column prop="${column.name}" label="${column.comment}" min-width="120" />
+#end
+                    <el-table-column label="操作" width="110" fixed="right" align="center">
+                        <template #default="{ row }">
+                            <ButtonTable v-permission="'${permissionPrefix}:update'" type="edit" @click="openEdit(row)" />
+                            <ButtonTable v-permission="'${permissionPrefix}:delete'" type="delete" @click="remove(row)" />
+                        </template>
+                    </el-table-column>
+                </Table>
+            </template>
+            <template #pagination>
+                <el-pagination
+                    v-model:current-page="query.pageNum"
+                    v-model:page-size="query.pageSize"
+                    :total="Number(total)"
+                    layout="total, sizes, prev, pager, next"
+                    background
+                    @current-change="load"
+                    @size-change="load"
+                />
+            </template>
+        </TableCard>
+
+        <el-dialog v-model="dialogVisible" :title="editingId ? '编辑${functionName}' : '新增${functionName}'" width="560px">
+            <el-form :model="form" label-width="110px">
+#foreach($column in $columns)
+                <el-form-item label="${column.comment}">
+                    <el-input v-model="form.${column.name}" />
+                </el-form-item>
+#end
+                <el-form-item label="备注">
+                    <el-input v-model="form.remark" type="textarea" :rows="3" />
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <el-button type="primary" :loading="saving" @click="save">保存</el-button>
+            </template>
+        </el-dialog>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted, reactive, ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import {
+    create${ClassName},
+    delete${ClassName},
+    page${ClassName}s,
+    update${ClassName},
+} from "@/api/${moduleName}/${businessName}";
+import type { ${ClassName}Form, ${ClassName}Row } from "@/types/${moduleName}/${businessName}";
+import ButtonTable from "@/components/core/tables/button-table/index.vue";
+import Table from "@/components/core/tables/table/index.vue";
+import TableCard from "@/components/core/tables/table-card/index.vue";
+
+defineOptions({ name: "${ClassName}Page" });
+
+const loading = ref(false);
+const saving = ref(false);
+const rows = ref<${ClassName}Row[]>([]);
+const total = ref(0);
+const dialogVisible = ref(false);
+const editingId = ref<string | null>(null);
+const query = reactive({ pageNum: 1, pageSize: 10 });
+const form = reactive<${ClassName}Form>({ remark: "" });
+
+function resetForm() {
+    Object.keys(form).forEach((key) => delete (form as Record<string, unknown>)[key]);
+    form.remark = "";
+}
+
+async function load() {
+    loading.value = true;
+    try {
+        const result = await page${ClassName}s(query);
+        rows.value = result.records;
+        total.value = Number(result.total);
+    } finally {
+        loading.value = false;
+    }
+}
+
+function openCreate() {
+    editingId.value = null;
+    resetForm();
+    dialogVisible.value = true;
+}
+
+function openEdit(row: ${ClassName}Row) {
+    editingId.value = row.id;
+    Object.assign(form, row);
+    dialogVisible.value = true;
+}
+
+async function save() {
+    saving.value = true;
+    try {
+        if (editingId.value) {
+            await update${ClassName}(editingId.value, { ...form });
+        } else {
+            await create${ClassName}({ ...form });
+        }
+        ElMessage.success("保存成功");
+        dialogVisible.value = false;
+        await load();
+    } finally {
+        saving.value = false;
+    }
+}
+
+async function remove(row: ${ClassName}Row) {
+    await ElMessageBox.confirm("确定删除吗？", "提示", { type: "warning" });
+    await delete${ClassName}(row.id);
+    ElMessage.success("删除成功");
+    await load();
+}
+
+onMounted(load);
+</script>

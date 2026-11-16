@@ -1,0 +1,15 @@
+export interface ${ClassName}Row {
+    id: string;
+#foreach($column in $columns)
+    ${column.name}: ${column.tsType};
+#end
+    createTime?: string;
+    remark?: string;
+}
+
+export interface ${ClassName}Form {
+#foreach($column in $columns)
+    ${column.name}?: ${column.tsType};
+#end
+    remark?: string;
+}

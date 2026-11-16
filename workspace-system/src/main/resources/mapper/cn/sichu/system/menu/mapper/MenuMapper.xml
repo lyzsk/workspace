@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sichu.system.menu.mapper.SysMenuMapper">
+
+    <select id="selectByUserId" resultType="cn.sichu.system.menu.entity.SysMenu">
+        SELECT DISTINCT m.*
+        FROM sys_menu m
+        JOIN sys_role_menu rm ON rm.menu_id = m.id AND rm.is_deleted = 0
+        JOIN sys_user_role ur ON ur.role_id = rm.role_id AND ur.is_deleted = 0
+        JOIN sys_role r ON r.id = rm.role_id AND r.is_deleted = 0 AND r.status = 1
+        WHERE ur.user_id = #{userId}
+          AND m.is_deleted = 0
+          AND m.status = 1
+          AND m.menu_type IN ('DIR', 'MENU')
+        ORDER BY m.sort_no, m.id
+    </select>
+
+</mapper>

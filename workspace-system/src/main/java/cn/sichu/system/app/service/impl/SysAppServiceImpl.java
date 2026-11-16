@@ -1,0 +1,169 @@
+package cn.sichu.system.app.service.impl;
+
+import cn.sichu.common.exception.BusinessException;
+import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.mapper.SysAppMapper;
+import cn.sichu.system.app.model.form.SysAppForm;
+import cn.sichu.system.app.model.vo.SysAppVO;
+import cn.sichu.system.app.service.ISysAppService;
+import cn.sichu.common.base.BaseImpl;
+import cn.sichu.system.code.SystemCode;
+import cn.sichu.system.menu.entity.SysMenu;
+import cn.sichu.system.menu.mapper.SysMenuMapper;
+import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.system.security.util.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ *
+ * @author sichu huang
+ * @since 2026/11/16
+ */
+@Service
+@RequiredArgsConstructor
+public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements ISysAppService {
+
+    private static final String APP_WORKSPACE = "workspace";
+
+    private final SysAppMapper appMapper;
+    private final SysMenuMapper menuMapper;
+
+    @Override
+    public List<SysAppVO> listAll() {
+        return appMapper.selectList(new LambdaQueryWrapper<SysApp>()
+                .orderByAsc(SysApp::getSortNo)
+                .orderByAsc(SysApp::getId))
+            .stream().map(SysAppVO::from).toList();
+    }
+
+    @Override
+    public SysAppVO getRuntime(String path) {
+        if (path == null || path.isBlank()) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        SysApp app = appMapper.selectOne(new LambdaQueryWrapper<SysApp>()
+            .eq(SysApp::getBasePath, normalizeBasePath(path))
+            .eq(SysApp::getStatus, 1));
+        if (app == null) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        LoginUser current = SecurityUtils.getLoginUser();
+        if (!current.getRoles().contains("SUPER_ADMIN")
+            && !current.getPermissions().contains(app.getAccessPermission())) {
+            throw new AccessDeniedException("无权访问该应用");
+        }
+        return SysAppVO.from(app);
+    }
+
+    @Override
+    @Transactional
+    public Long create(SysAppForm form) {
+        validate(form);
+        checkCodeUnique(form.getCode(), null);
+        checkBasePathUnique(form.getBasePath(), null);
+        SysApp app = new SysApp();
+        applyForm(app, form);
+        appMapper.insert(app);
+        return app.getId();
+    }
+
+    @Override
+    @Transactional
+    public void update(Long id, SysAppForm form) {
+        SysApp app = appMapper.selectById(id);
+        if (app == null) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        if (APP_WORKSPACE.equals(app.getCode()) && !APP_WORKSPACE.equals(form.getCode().trim())) {
+            throw new BusinessException(SystemCode.APP_PROTECTED);
+        }
+        if (!app.getCode().equals(form.getCode().trim())) {
+            Long menus = menuMapper.selectCount(
+                new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, app.getCode()));
+            if (menus > 0) {
+                throw new BusinessException(SystemCode.APP_CODE_IMMUTABLE);
+            }
+        }
+        validate(form);
+        checkCodeUnique(form.getCode(), id);
+        checkBasePathUnique(form.getBasePath(), id);
+        applyForm(app, form);
+        appMapper.updateById(app);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        SysApp app = appMapper.selectById(id);
+        if (app == null) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        if (APP_WORKSPACE.equals(app.getCode())) {
+            throw new BusinessException(SystemCode.APP_PROTECTED);
+        }
+        Long menus = menuMapper.selectCount(
+            new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, app.getCode()));
+        if (menus > 0) {
+            throw new BusinessException(SystemCode.APP_HAS_MENUS);
+        }
+        appMapper.deleteById(id);
+    }
+
+    private void validate(SysAppForm form) {
+        if (form.getModuleEntry() == null || form.getModuleEntry().isBlank()) {
+            throw new BusinessException(SystemCode.APP_ENTRY_URL_REQUIRED);
+        }
+    }
+
+    private void applyForm(SysApp app, SysAppForm form) {
+        app.setCode(form.getCode().trim());
+        app.setName(form.getName().trim());
+        app.setIcon(form.getIcon());
+        app.setBasePath(normalizeBasePath(form.getBasePath()));
+        app.setModuleEntry(form.getModuleEntry().trim());
+        app.setStyleEntry(form.getStyleEntry() == null ? null : form.getStyleEntry().trim());
+        app.setAccessPermission(form.getAccessPermission().trim());
+        app.setSortNo(form.getSortNo() == null ? 0 : form.getSortNo());
+        app.setStatus(form.getStatus() == null ? 1 : form.getStatus());
+        app.setRemark(form.getRemark());
+    }
+
+    private String normalizeBasePath(String basePath) {
+        String path = basePath.trim();
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        while (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        return path;
+    }
+
+    private void checkCodeUnique(String code, Long excludeId) {
+        LambdaQueryWrapper<SysApp> wrapper =
+            new LambdaQueryWrapper<SysApp>().eq(SysApp::getCode, code.trim());
+        if (excludeId != null) {
+            wrapper.ne(SysApp::getId, excludeId);
+        }
+        if (appMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException(SystemCode.APP_CODE_EXISTS);
+        }
+    }
+
+    private void checkBasePathUnique(String basePath, Long excludeId) {
+        LambdaQueryWrapper<SysApp> wrapper = new LambdaQueryWrapper<SysApp>()
+            .eq(SysApp::getBasePath, normalizeBasePath(basePath));
+        if (excludeId != null) {
+            wrapper.ne(SysApp::getId, excludeId);
+        }
+        if (appMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException(SystemCode.APP_BASE_PATH_EXISTS);
+        }
+    }
+}

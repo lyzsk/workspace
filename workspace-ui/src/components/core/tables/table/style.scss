@@ -1,0 +1,15 @@
+.art-table {
+    width: 100%;
+}
+
+.table-size-small :deep(.el-table__cell) {
+    padding: 4px 0;
+}
+
+.table-size-large :deep(.el-table__cell) {
+    padding: 14px 0;
+}
+
+:deep(.el-table.no-header-bg) {
+    --el-table-header-bg-color: transparent;
+}

@@ -1,0 +1,21 @@
+package ${packageName}.model.form;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+@Data
+public class ${ClassName}Form {
+#foreach($column in $columns)
+    private ${column.javaType} ${column.name};
+#end
+    private String remark;
+}

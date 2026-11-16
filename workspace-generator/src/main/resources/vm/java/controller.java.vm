@@ -1,0 +1,68 @@
+package ${packageName}.controller;
+
+import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.result.PageResult;
+import cn.sichu.common.result.Result;
+import ${packageName}.model.form.${ClassName}Form;
+import ${packageName}.model.query.${ClassName}Query;
+import ${packageName}.model.vo.${ClassName}VO;
+import ${packageName}.service.I${ClassName}Service;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+@RestController
+@RequestMapping("/api/${moduleName}/${businessName}")
+@RequiredArgsConstructor
+public class ${ClassName}Controller {
+
+    private final I${ClassName}Service service;
+
+    @GetMapping
+    @PreAuthorize("@ss.hasPerm('${permissionPrefix}:list')")
+    public Result<PageResult<${ClassName}VO>> page(@Valid ${ClassName}Query query) {
+        return Result.success(service.page(query));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("@ss.hasPerm('${permissionPrefix}:list')")
+    public Result<${ClassName}VO> get(@PathVariable Long id) {
+        return Result.success(service.get(id));
+    }
+
+    @PostMapping
+    @PreAuthorize("@ss.hasPerm('${permissionPrefix}:create')")
+    @Log(module = "${functionName}", operation = "新增")
+    public Result<String> create(@RequestBody @Valid ${ClassName}Form form) {
+        return Result.success(service.create(form).toString());
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("@ss.hasPerm('${permissionPrefix}:update')")
+    @Log(module = "${functionName}", operation = "修改")
+    public Result<Void> update(@PathVariable Long id, @RequestBody @Valid ${ClassName}Form form) {
+        service.update(id, form);
+        return Result.success();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@ss.hasPerm('${permissionPrefix}:delete')")
+    @Log(module = "${functionName}", operation = "删除")
+    public Result<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return Result.success();
+    }
+}

@@ -1,0 +1,144 @@
+.inline {
+    display: inline;
+}
+
+.inline-flex {
+    display: inline-flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.flex-c {
+    display: flex;
+    align-items: center;
+}
+
+.flex-cc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.min-w-8 {
+    min-width: 32px;
+}
+
+.h-8 {
+    height: 32px;
+}
+
+.size-8,
+.\!size-8 {
+    width: 32px;
+    height: 32px;
+}
+
+.size-8\.5 {
+    width: 34px;
+    height: 34px;
+}
+
+.px-2\.5 {
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.mr-2\.5 {
+    margin-right: 10px;
+}
+
+.text-sm {
+    font-size: 14px;
+}
+
+.text-xl {
+    font-size: 20px;
+}
+
+.c-p {
+    cursor: pointer;
+}
+
+.rounded {
+    border-radius: 4px;
+}
+
+.rounded-md {
+    border-radius: 6px;
+}
+
+.align-middle {
+    vertical-align: middle;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.tad-300 {
+    transition: all 0.3s;
+}
+
+.bg-theme\/12 {
+    background: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+.text-theme {
+    color: var(--primary);
+}
+
+.bg-secondary\/12 {
+    background: color-mix(in oklab, var(--art-secondary) 12%, transparent);
+}
+
+.text-secondary {
+    color: var(--art-secondary);
+}
+
+.bg-error\/12 {
+    background: color-mix(in oklab, var(--art-error) 12%, transparent);
+}
+
+.text-error {
+    color: var(--art-error);
+}
+
+.bg-info\/12 {
+    background: color-mix(in oklab, var(--art-info) 12%, transparent);
+}
+
+.text-info {
+    color: var(--art-info);
+}
+
+.bg-g-200 {
+    background: var(--slider-bg);
+}
+
+.dark\:bg-g-300\/45 {
+    background: var(--slider-bg);
+}
+
+.text-g-600 {
+    color: var(--text-muted);
+}
+
+.dark\:text-g-800 {
+    color: var(--text);
+}
+
+.hover\:bg-hover-color:hover {
+    background: var(--border);
+}
+
+.art-svg-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}

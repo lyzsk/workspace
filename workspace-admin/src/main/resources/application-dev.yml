@@ -1,0 +1,16 @@
+workspace:
+  api-doc:
+    enabled: true
+  generator:
+    enabled: true
+
+springdoc:
+  default-flat-param-object: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+knife4j:
+  enable: true
+  production: false

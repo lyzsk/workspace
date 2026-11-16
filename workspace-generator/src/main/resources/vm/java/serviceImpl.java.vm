@@ -1,0 +1,80 @@
+package ${packageName}.service.impl;
+
+import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.result.PageResult;
+import cn.sichu.common.result.ResultCode;
+import ${packageName}.entity.${ClassName};
+import ${packageName}.mapper.${ClassName}Mapper;
+import ${packageName}.model.form.${ClassName}Form;
+import ${packageName}.model.query.${ClassName}Query;
+import ${packageName}.model.vo.${ClassName}VO;
+import ${packageName}.service.I${ClassName}Service;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+@Service
+@RequiredArgsConstructor
+public class ${ClassName}ServiceImpl extends BaseImpl<${ClassName}Mapper, ${ClassName}>
+    implements I${ClassName}Service {
+
+    @Override
+    public PageResult<${ClassName}VO> page(${ClassName}Query query) {
+        Page<${ClassName}> page = new Page<>(query.getPageNum(), query.getPageSize());
+        Page<${ClassName}> result = baseMapper.selectPage(page, null);
+        List<${ClassName}VO> records = result.getRecords().stream().map(${ClassName}VO::from).toList();
+        return PageResult.of(records, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    @Override
+    public ${ClassName}VO get(Long id) {
+        return ${ClassName}VO.from(required(id));
+    }
+
+    @Override
+    @Transactional
+    public Long create(${ClassName}Form form) {
+        ${ClassName} entity = new ${ClassName}();
+        applyForm(entity, form);
+        baseMapper.insert(entity);
+        return entity.getId();
+    }
+
+    @Override
+    @Transactional
+    public void update(Long id, ${ClassName}Form form) {
+        ${ClassName} entity = required(id);
+        applyForm(entity, form);
+        baseMapper.updateById(entity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        baseMapper.deleteById(required(id).getId());
+    }
+
+    private ${ClassName} required(Long id) {
+        ${ClassName} entity = baseMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND);
+        }
+        return entity;
+    }
+
+    private void applyForm(${ClassName} entity, ${ClassName}Form form) {
+#foreach($column in $columns)
+        entity.set${column.name.substring(0,1).toUpperCase()}${column.name.substring(1)}(form.get${column.name.substring(0,1).toUpperCase()}${column.name.substring(1)}());
+#end
+        entity.setRemark(form.getRemark());
+    }
+}

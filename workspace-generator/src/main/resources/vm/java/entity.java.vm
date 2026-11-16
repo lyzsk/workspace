@@ -1,0 +1,25 @@
+package ${packageName}.entity;
+
+import cn.sichu.common.base.${baseEntity};
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+/**
+ *
+ * @author workspace-generator
+ * @since ${now}
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("${tableName}")
+public class ${ClassName} extends ${baseEntity} {
+#foreach($column in $columns)
+    private ${column.javaType} ${column.name};
+#end
+}

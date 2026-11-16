@@ -1,0 +1,117 @@
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    height: 100vh;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    background: var(--sidebar-bg);
+    transition: width 0.25s;
+    user-select: none;
+}
+
+.sidebar.collapsed {
+    width: 64px;
+}
+
+.sidebar .logo {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    line-height: 60px;
+    cursor: pointer;
+}
+
+.sidebar .logo img {
+    width: 32px;
+    height: 32px;
+    margin-left: 22px;
+    object-fit: contain;
+}
+
+.sidebar .logo span {
+    margin-left: 10px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .logo img {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.sidebar-scroll {
+    height: calc(100% - 60px);
+}
+
+.sidebar-scroll :deep(.el-scrollbar__bar.is-vertical) {
+    width: 4px;
+}
+
+.sidebar-scroll :deep(.el-scrollbar__thumb) {
+    right: -2px;
+    border-radius: 2px;
+    background: #ccc;
+}
+
+.sidebar .el-menu {
+    height: 100%;
+    overflow: hidden;
+    border-right: 0;
+    background: transparent;
+    overscroll-behavior: contain;
+}
+
+.sidebar .el-sub-menu__title,
+.sidebar .el-menu-item {
+    width: calc(100% - 16px);
+    height: 42px !important;
+    margin-bottom: 4px;
+    margin-left: 8px;
+    border-radius: 6px;
+    line-height: 42px !important;
+}
+
+.sidebar .el-menu-item span,
+.sidebar .el-sub-menu__title span {
+    overflow: hidden;
+    font-size: 14px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar .menu-icon {
+    margin-right: 8px;
+    margin-left: -7px;
+    font-size: 20px;
+}
+
+.sidebar .el-sub-menu__icon-arrow {
+    width: 13px !important;
+    color: var(--text-muted);
+    font-size: 13px !important;
+}
+
+.sidebar .el-sub-menu__title:hover,
+.sidebar .el-menu-item:not(.is-active):hover {
+    background: var(--slider-bg) !important;
+}
+
+.sidebar .el-menu-item.is-active {
+    background: var(--el-color-primary-light-9) !important;
+    color: var(--primary) !important;
+}
+
+.sidebar .el-menu-item.is-active .menu-icon,
+.sidebar .el-menu-item.is-active .menu-icon .art-svg-icon {
+    color: var(--primary) !important;
+}
+
+.sidebar .el-menu--collapse .el-sub-menu.is-active .el-sub-menu__title .menu-icon {
+    color: var(--primary) !important;
+}
