@@ -37,6 +37,9 @@ service.interceptors.response.use(
             } else {
                 handleSessionExpired("expired");
             }
+        } else if (error.response?.status === 403 && !config?._silent) {
+            const body = error.response.data as ApiResult<unknown> | undefined;
+            ElMessage.error(body?.msg || "无权限");
         }
         return Promise.reject(error);
     },
@@ -86,8 +89,16 @@ export async function request<T>(
     } as AxiosRequestConfig);
     const body = response.data;
 
-    if (body.code !== "A0001") {
-        ElMessage.error(body.msg || "请求失败");
+    if (body.code !== 200) {
+        if (body.code === 401) {
+            if (options?.silent) {
+                markExpired();
+            } else {
+                handleSessionExpired("expired");
+            }
+        } else if (!options?.silent) {
+            ElMessage.error(body.msg || (body.code === 403 ? "无权限" : "请求失败"));
+        }
         throw new Error(body.msg || "REQUEST_FAILED");
     }
 

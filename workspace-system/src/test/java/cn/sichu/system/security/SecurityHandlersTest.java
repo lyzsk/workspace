@@ -30,7 +30,7 @@ class SecurityHandlersTest {
 
         assertEquals(401, response.getStatus());
         Result<?> body = objectMapper.readValue(response.getContentAsString(), Result.class);
-        assertEquals("A0004", body.getCode());
+        assertEquals(401, body.getCode());
     }
 
     @Test
@@ -42,6 +42,6 @@ class SecurityHandlersTest {
 
         assertEquals(403, response.getStatus());
         Result<?> body = objectMapper.readValue(response.getContentAsString(), Result.class);
-        assertEquals("A0005", body.getCode());
+        assertEquals(403, body.getCode());
     }
 }

@@ -49,7 +49,7 @@ public class NoticeAttachmentServiceImpl implements INoticeAttachmentService {
             throw new BusinessException(ResultCode.NOT_FOUND, "通知不存在");
         }
         if (notice.getStatus() == null || notice.getStatus() != 0) {
-            throw new BusinessException(ResultCode.FAILED, "仅草稿通知可以上传附件");
+            throw new BusinessException(ResultCode.CONFLICT, "仅草稿通知可以上传附件");
         }
         assertOwner(notice, current);
         SysFile file = fileService.store(multipart);

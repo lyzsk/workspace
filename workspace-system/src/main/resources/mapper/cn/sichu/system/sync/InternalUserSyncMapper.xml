@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sichu.system.sync.InternalUserSyncMapper">
+
+    <sql id="authorizedUserFrom">
+        FROM sys_app a
+        JOIN sys_menu m ON m.permission = a.access_permission
+            AND m.is_deleted = 0 AND m.status = 1
+        JOIN sys_role_menu rm ON rm.menu_id = m.id AND rm.is_deleted = 0
+        JOIN sys_role r ON r.id = rm.role_id AND r.is_deleted = 0 AND r.status = 1
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        JOIN sys_user u ON u.id = ur.user_id AND u.is_deleted = 0
+        WHERE a.code = #{appCode} AND a.is_deleted = 0
+        <if test="updatedAfter != null">
+            AND u.update_time &gt; #{updatedAfter}
+        </if>
+    </sql>
+
+    <select id="selectAuthorizedUsers"
+            resultType="cn.sichu.system.sync.model.vo.InternalUserSyncVO">
+        SELECT DISTINCT
+            u.id AS workspace_user_id,
+            u.username,
+            u.real_name,
+            u.email,
+            u.mobile,
+            u.gender,
+            u.dept_id,
+            u.status,
+            u.password AS password_hash,
+            u.update_time AS updated_at
+        <include refid="authorizedUserFrom"/>
+        ORDER BY u.id
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countAuthorizedUsers" resultType="long">
+        SELECT COUNT(DISTINCT u.id)
+        <include refid="authorizedUserFrom"/>
+    </select>
+
+</mapper>

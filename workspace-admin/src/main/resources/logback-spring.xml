@@ -6,7 +6,7 @@
     <springProperty scope="context" name="ROOT_DIR" source="project.root-dir" defaultValue="."/>
     <property name="LOG_DIR" value="${ROOT_DIR}/logs/workspace-admin"/>
     <property name="FILE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{40} - %msg%n"/>
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{requestId}] %logger{40} - %msg%n"/>
     <property name="SQL_LEVEL" value="INFO"/>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">

@@ -71,6 +71,20 @@ export async function changePassword(payload: PasswordPayload): Promise<void> {
     });
 }
 
+export async function touch(options?: { silent?: boolean }): Promise<void> {
+    if (USE_MOCK) {
+        return;
+    }
+
+    await request<void>(
+        {
+            url: "/auth/touch",
+            method: "post",
+        },
+        { silent: options?.silent },
+    );
+}
+
 export async function logout(options?: { silent?: boolean }): Promise<void> {
     if (USE_MOCK) {
         return;

@@ -10,6 +10,7 @@ const PERMISSION_CHANGED_PREFIXES = [
     "/api/system/roles",
     "/api/system/menus",
     "/api/system/users",
+    "/api/system/apps",
 ];
 
 let pending = false;

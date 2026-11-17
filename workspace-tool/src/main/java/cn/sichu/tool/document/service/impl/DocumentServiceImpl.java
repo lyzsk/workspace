@@ -233,7 +233,7 @@ public class DocumentServiceImpl extends BaseImpl<SysDocumentMapper, SysDocument
                 .set(SysDocument::getContent, objectMapper.writeValueAsString(content))
                 .set(SysDocument::getRevision, revision);
             if (baseMapper.update(null, update) != 1) {
-                throw new BusinessException(ResultCode.FAILED, "文档已被他人更新，请刷新后重试");
+                throw new BusinessException(ResultCode.CONFLICT, "文档已被他人更新，请刷新后重试");
             }
 
             SysDocumentOperation operation = new SysDocumentOperation();
@@ -259,7 +259,7 @@ public class DocumentServiceImpl extends BaseImpl<SysDocumentMapper, SysDocument
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            throw new BusinessException(ResultCode.FAILED, "文档操作处理失败: " + e.getMessage());
+            throw new BusinessException(ResultCode.FAILED, "文档操作处理失败");
         }
     }
 

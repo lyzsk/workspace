@@ -26,5 +26,5 @@ public class JwtProperties {
     @NotBlank
     private String issuer = "workspace";
 
-    private Duration accessTokenTtl = Duration.ofMinutes(30);
+    private Duration accessTokenTtl = Duration.ofHours(12);
 }

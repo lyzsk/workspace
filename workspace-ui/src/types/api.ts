@@ -1,7 +1,8 @@
 export interface ApiResult<T = unknown> {
-    code: string;
+    code: number;
     msg: string;
     data: T;
+    bizCode?: string;
 }
 
 export interface UserInfo {

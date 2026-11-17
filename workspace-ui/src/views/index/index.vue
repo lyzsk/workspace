@@ -2,11 +2,16 @@
     <div class="layout">
         <aside
             class="sidebar"
-            :class="{ collapsed: sidebarCollapsed && !isAppMode, 'app-rail': isAppMode }"
+            :class="{
+                collapsed: sidebarCollapsed && !isAppMode,
+                'app-rail': isAppMode,
+            }"
         >
             <div class="logo" @click="goHome">
                 <img src="/apple-touch-icon.png" alt="Workspace" />
-                <span v-if="!sidebarCollapsed || isAppMode">{{ isAppMode ? "应用" : t("app.name") }}</span>
+                <span v-if="!sidebarCollapsed && !isAppMode">{{
+                    t("app.name")
+                }}</span>
             </div>
             <el-scrollbar class="sidebar-scroll">
                 <el-menu
@@ -22,7 +27,9 @@
                             <SvgIcon icon="ri:home-2-line" />
                         </div>
                         <template #title>
-                            <span class="menu-name">{{ t("menu.dashboard") }}</span>
+                            <span class="menu-name">{{
+                                t("menu.dashboard")
+                            }}</span>
                         </template>
                     </el-menu-item>
                     <SidebarMenu :menus="permissionStore.menus" />
@@ -32,6 +39,7 @@
                     :default-active="route.path"
                     router
                     class="menu el-menu-design"
+                    :collapse="true"
                     :collapse-transition="false"
                 >
                     <el-menu-item
@@ -41,7 +49,11 @@
                     >
                         <div class="menu-icon flex-cc">
                             <SvgIcon
-                                :icon="app.icon?.startsWith('ri:') ? app.icon : 'ri:apps-line'"
+                                :icon="
+                                    app.icon?.startsWith('ri:')
+                                        ? app.icon
+                                        : 'ri:apps-line'
+                                "
                             />
                         </div>
                         <template #title>
@@ -54,123 +66,127 @@
 
         <div class="main">
             <template v-if="!isAppMode">
-            <header class="header">
-                <div class="header-left">
-                    <button
-                        class="icon-btn"
-                        :title="sidebarCollapsed ? '展开菜单' : '收起菜单'"
-                        @click="sidebarCollapsed = !sidebarCollapsed"
-                    >
-                        <el-icon>
-                            <Expand v-if="sidebarCollapsed" />
-                            <Fold v-else />
-                        </el-icon>
-                    </button>
-                    <button
-                        class="icon-btn"
-                        title="刷新"
-                        @click="refreshPage"
-                    >
-                        <el-icon><Refresh /></el-icon>
-                    </button>
-                    <nav class="top-breadcrumb">
-                        <template
-                            v-for="(item, index) in breadcrumbs"
-                            :key="`${item.title}-${index}`"
+                <header class="header">
+                    <div class="header-left">
+                        <button
+                            class="icon-btn"
+                            :title="sidebarCollapsed ? '展开菜单' : '收起菜单'"
+                            @click="sidebarCollapsed = !sidebarCollapsed"
                         >
-                            <a
-                                v-if="item.clickable && item.path"
-                                @click.prevent="router.push(item.path)"
+                            <el-icon>
+                                <Expand v-if="sidebarCollapsed" />
+                                <Fold v-else />
+                            </el-icon>
+                        </button>
+                        <button
+                            class="icon-btn"
+                            title="刷新"
+                            @click="refreshPage"
+                        >
+                            <el-icon><Refresh /></el-icon>
+                        </button>
+                        <nav class="top-breadcrumb">
+                            <template
+                                v-for="(item, index) in breadcrumbs"
+                                :key="`${item.title}-${index}`"
                             >
-                                {{ item.title }}
-                            </a>
-                            <span v-else>{{ item.title }}</span>
-                            <span
-                                v-if="index < breadcrumbs.length - 1"
-                                class="top-breadcrumb-sep"
-                            >
-                                /
-                            </span>
-                        </template>
-                    </nav>
-                </div>
+                                <a
+                                    v-if="item.clickable && item.path"
+                                    @click.prevent="router.push(item.path)"
+                                >
+                                    {{ item.title }}
+                                </a>
+                                <span v-else>{{ item.title }}</span>
+                                <span
+                                    v-if="index < breadcrumbs.length - 1"
+                                    class="top-breadcrumb-sep"
+                                >
+                                    /
+                                </span>
+                            </template>
+                        </nav>
+                    </div>
 
-                <div class="actions">
-                    <button
-                        class="icon-btn"
-                        :title="isFullscreen ? '退出全屏' : '全屏'"
-                        :aria-label="isFullscreen ? '退出全屏' : '全屏'"
-                        @click="toggleFullscreen"
-                    >
-                        <SvgIcon
-                            :icon="
-                                isFullscreen
-                                    ? 'ri:fullscreen-exit-line'
-                                    : 'ri:fullscreen-line'
+                    <div class="actions">
+                        <button
+                            class="icon-btn"
+                            :title="isFullscreen ? '退出全屏' : '全屏'"
+                            :aria-label="isFullscreen ? '退出全屏' : '全屏'"
+                            @click="toggleFullscreen"
+                        >
+                            <SvgIcon
+                                :icon="
+                                    isFullscreen
+                                        ? 'ri:fullscreen-exit-line'
+                                        : 'ri:fullscreen-line'
+                                "
+                            />
+                        </button>
+                        <button
+                            class="icon-btn"
+                            :title="
+                                appStore.locale === 'zh-CN'
+                                    ? 'English'
+                                    : '简体中文'
                             "
-                        />
-                    </button>
-                    <button
-                        class="icon-btn"
-                        :title="
-                            appStore.locale === 'zh-CN' ? 'English' : '简体中文'
-                        "
-                        :aria-label="
-                            appStore.locale === 'zh-CN' ? 'English' : '简体中文'
-                        "
-                        @click="toggleLocale"
-                    >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                                fill="currentColor"
-                                d="m18.5 10l4.4 11h-2.155l-1.201-3h-4.09l-1.199 3h-2.154L16.5 10zM10 2v2h6v2h-1.968a18.2 18.2 0 0 1-3.62 6.301a15 15 0 0 0 2.335 1.707l-.75 1.878A17 17 0 0 1 9 13.725a16.7 16.7 0 0 1-6.201 3.548l-.536-1.929a14.7 14.7 0 0 0 5.327-3.042A18 18 0 0 1 4.767 8h2.24A16 16 0 0 0 9 10.877a16.2 16.2 0 0 0 2.91-4.876L2 6V4h6V2zm7.5 10.885L16.253 16h2.492z"
-                            />
-                        </svg>
-                    </button>
-                    <button
-                        class="icon-btn theme-btn"
-                        :title="
-                            appStore.isDark
-                                ? t('header.light')
-                                : t('header.dark')
-                        "
-                        :aria-label="
-                            appStore.isDark
-                                ? t('header.light')
-                                : t('header.dark')
-                        "
-                        @click="toggleTheme"
-                    >
-                        <svg
-                            v-if="appStore.isDark"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
+                            :aria-label="
+                                appStore.locale === 'zh-CN'
+                                    ? 'English'
+                                    : '简体中文'
+                            "
+                            @click="toggleLocale"
                         >
-                            <path
-                                fill="currentColor"
-                                d="M12 18a6 6 0 1 1 0-12a6 6 0 0 1 0 12M11 1h2v3h-2zm0 19h2v3h-2zM3.515 4.929l1.414-1.414L7.05 5.636L5.636 7.05zM16.95 18.364l1.414-1.414l2.121 2.121l-1.414 1.414zm2.121-14.85l1.414 1.415l-2.121 2.121l-1.414-1.414zM5.636 16.95l1.414 1.414l-2.121 2.121l-1.414-1.414zM23 11v2h-3v-2zM4 11v2H1v-2z"
-                            />
-                        </svg>
-                        <svg v-else viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                                fill="currentColor"
-                                d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2h.1A6.98 6.98 0 0 0 10 7m-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938A8 8 0 0 0 4 12"
-                            />
-                        </svg>
-                    </button>
-                    <IconButton
-                        icon="ri:notification-2-line"
-                        class="notice-button"
-                        @click="toggleNotice"
-                    >
-                        <span v-if="unreadCount" class="notice-dot"></span>
-                    </IconButton>
-                    <Notification v-model="noticeVisible" />
-                    <UserMenu />
-                </div>
-            </header>
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    fill="currentColor"
+                                    d="m18.5 10l4.4 11h-2.155l-1.201-3h-4.09l-1.199 3h-2.154L16.5 10zM10 2v2h6v2h-1.968a18.2 18.2 0 0 1-3.62 6.301a15 15 0 0 0 2.335 1.707l-.75 1.878A17 17 0 0 1 9 13.725a16.7 16.7 0 0 1-6.201 3.548l-.536-1.929a14.7 14.7 0 0 0 5.327-3.042A18 18 0 0 1 4.767 8h2.24A16 16 0 0 0 9 10.877a16.2 16.2 0 0 0 2.91-4.876L2 6V4h6V2zm7.5 10.885L16.253 16h2.492z"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            class="icon-btn theme-btn"
+                            :title="
+                                appStore.isDark
+                                    ? t('header.light')
+                                    : t('header.dark')
+                            "
+                            :aria-label="
+                                appStore.isDark
+                                    ? t('header.light')
+                                    : t('header.dark')
+                            "
+                            @click="toggleTheme"
+                        >
+                            <svg
+                                v-if="appStore.isDark"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M12 18a6 6 0 1 1 0-12a6 6 0 0 1 0 12M11 1h2v3h-2zm0 19h2v3h-2zM3.515 4.929l1.414-1.414L7.05 5.636L5.636 7.05zM16.95 18.364l1.414-1.414l2.121 2.121l-1.414 1.414zm2.121-14.85l1.414 1.415l-2.121 2.121l-1.414-1.414zM5.636 16.95l1.414 1.414l-2.121 2.121l-1.414-1.414zM23 11v2h-3v-2zM4 11v2H1v-2z"
+                                />
+                            </svg>
+                            <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    fill="currentColor"
+                                    d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2h.1A6.98 6.98 0 0 0 10 7m-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938A8 8 0 0 0 4 12"
+                                />
+                            </svg>
+                        </button>
+                        <IconButton
+                            icon="ri:notification-2-line"
+                            class="notice-button"
+                            @click="toggleNotice"
+                        >
+                            <span v-if="unreadCount" class="notice-dot"></span>
+                        </IconButton>
+                        <Notification v-model="noticeVisible" />
+                        <UserMenu />
+                    </div>
+                </header>
 
-            <WorkTabs :title="currentTab.title" :icon="currentTab.icon" />
+                <WorkTabs :title="currentTab.title" :icon="currentTab.icon" />
             </template>
 
             <main class="content" :class="{ 'content-full': isAppMode }">
@@ -200,6 +216,7 @@ import { toggleThemeWithAnimation } from "@/utils/themeAnimation";
 import { dataRefreshKey, applyPendingDataChange } from "@/utils/dataChange";
 import { resetExpired } from "@/utils/session";
 import { useIdleLogout } from "@/composables/useIdleLogout";
+import { useSessionHeartbeat } from "@/composables/useSessionHeartbeat";
 import { ElNotification } from "element-plus";
 import { getMe } from "@/api/auth";
 import { useUserStore } from "@/store/modules/user";
@@ -259,9 +276,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
 });
 
 const sidebarCollapsed = ref(false);
-const isAppMode = computed(() =>
-    String(route.name ?? "").startsWith("app:"),
-);
+const isAppMode = computed(() => String(route.name ?? "").startsWith("app:"));
 
 interface AppEntry {
     id: string;
@@ -314,8 +329,7 @@ async function toggleFullscreen() {
         } else {
             await document.documentElement.requestFullscreen();
         }
-    } catch {
-    }
+    } catch {}
 }
 
 function toggleNotice() {
@@ -351,9 +365,11 @@ function onSessionExpired() {
 }
 
 async function onDataRefresh(event: Event) {
-    const permissionChanged = (event as CustomEvent<{
-        permissionChanged?: boolean;
-    }>).detail?.permissionChanged;
+    const permissionChanged = (
+        event as CustomEvent<{
+            permissionChanged?: boolean;
+        }>
+    ).detail?.permissionChanged;
     if (permissionChanged) {
         try {
             userStore.setUser(await getMe());
@@ -362,7 +378,10 @@ async function onDataRefresh(event: Event) {
             try {
                 await router.replace(router.currentRoute.value.fullPath);
             } catch (error) {
-                if (!(error instanceof Error) || error.name !== "NavigationDuplicated") {
+                if (
+                    !(error instanceof Error) ||
+                    error.name !== "NavigationDuplicated"
+                ) {
                     throw error;
                 }
             }
@@ -378,6 +397,7 @@ async function onDataRefresh(event: Event) {
 }
 
 useIdleLogout();
+useSessionHeartbeat();
 
 onMounted(() => {
     resetExpired();
@@ -403,7 +423,6 @@ function toggleLocale() {
 function toggleTheme(event: MouseEvent) {
     toggleThemeWithAnimation(event, () => appStore.toggleTheme());
 }
-
 </script>
 
 <style scoped lang="scss">
@@ -428,10 +447,12 @@ function toggleTheme(event: MouseEvent) {
 }
 
 .sidebar.app-rail {
-    width: 200px;
+    width: 64px;
 }
 
 .sidebar.app-rail .logo {
+    justify-content: center;
+    padding: 0;
     cursor: pointer;
 }
 

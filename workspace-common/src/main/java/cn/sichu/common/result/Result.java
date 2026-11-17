@@ -15,7 +15,7 @@ public class Result<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String code;
+    private int code;
     private String msg;
     private T data;
 
@@ -55,6 +55,6 @@ public class Result<T> implements Serializable {
     }
 
     public static boolean isSuccess(Result<?> result) {
-        return result != null && ResultCode.SUCCESS.getCode().equals(result.getCode());
+        return result != null && ResultCode.SUCCESS.getCode() == result.getCode();
     }
 }

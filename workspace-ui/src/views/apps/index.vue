@@ -103,10 +103,11 @@
                         placeholder="如 /ies/micro/ies-micro.css"
                     />
                 </el-form-item>
-                <el-form-item label="访问权限码" required>
+                <el-form-item label="访问权限码">
                     <el-input
-                        v-model.trim="form.accessPermission"
-                        placeholder="如 ies:access（需在菜单管理中定义为按钮权限）"
+                        :model-value="form.code ? `${form.code}:access` : ''"
+                        disabled
+                        placeholder="根据应用编码自动生成"
                     />
                 </el-form-item>
                 <el-form-item label="排序">
@@ -156,6 +157,7 @@ import ButtonTable from "@/components/core/tables/button-table/index.vue";
 import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
 import { useFormDraft } from "@/composables/useFormDraft";
+import { notifyDataChanged } from "@/utils/dataChange";
 
 defineOptions({ name: "AppList" });
 
@@ -237,10 +239,9 @@ async function save() {
         !form.value.code ||
         !form.value.name ||
         !form.value.basePath ||
-        !form.value.moduleEntry ||
-        !form.value.accessPermission
+        !form.value.moduleEntry
     ) {
-        ElMessage.warning("应用编码、名称、路由、模块入口和访问权限码不能为空");
+        ElMessage.warning("应用编码、名称、路由和模块入口不能为空");
         return;
     }
     saving.value = true;
@@ -254,6 +255,7 @@ async function save() {
         draft.clear();
         dialogVisible.value = false;
         await load();
+        notifyDataChanged("/api/system/apps");
     } finally {
         saving.value = false;
     }
@@ -266,6 +268,7 @@ async function remove(row: AppInfo) {
     await deleteApp(row.id);
     ElMessage.success("删除成功");
     await load();
+    notifyDataChanged("/api/system/apps");
 }
 
 onMounted(load);

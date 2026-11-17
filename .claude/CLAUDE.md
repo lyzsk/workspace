@@ -48,9 +48,9 @@ model{entity,form,query,vo} / converter / code
 
 注意：目录名和包名用 `service`，不要用拼错的 `serivce`。
 
-接口命名统一为 `I + 完整业务名 + Service`，实现类为 `...ServiceImpl`；业务名写全，不用缩写或省略业务域。示例：`IEapToolServiceTicketService` / `EapToolServiceTicketServiceImpl`，不要写成 `IEapTicketService` / `EapTicketServiceImpl`。
+接口命名统一为 `I + 完整业务名 + Service`，实现类为 `...ServiceImpl`；业务名写全，不用缩写或省略业务域。示例：`INotificationPreferenceService` / `NotificationPreferenceServiceImpl`，不要写成 `INoticePrefService` / `NoticePrefServiceImpl`。
 
-配置前缀同样用完整业务名：`workspace.eap-tool-service`，不要用 `workspace.eap` 这类缩写；环境变量同理（`EAP_TOOL_SERVICE_UI_URL`、`EAP_TOOL_SERVICE_TICKET_SECRET`）。
+配置前缀同样用完整业务名，不要用 `workspace.eap` 这类缩写；环境变量同理，用应用全名的大写下划线形式（如 `EAP_TOOL_SERVICE_*`）。
 
 ## 4. 实体、ID、响应
 
@@ -60,7 +60,7 @@ model{entity,form,query,vo} / converter / code
 - 雪花 import：`com.baomidou.mybatisplus.spring.service.impl.ServiceImpl`（MP 3.5.18.1 的包路径，**不是** `extension`）。
 - 雪花 EPOCH：`2026-11-14T00:00:00+08:00` = `1794585600000L`；全实例/全环境一致，生成 ID 后不再改。
 - Long → String：`JacksonConfig` 已把 Long/ long 序列化为字符串；前端 ID 类型用 `string`。
-- `ResultCode`：`SUCCESS=A0001`、`FAILED=A0002`；通用码 A0003~A0007；业务码 A1xxx=system、A2xxx=eap、A3xxx=cim。
+- `ResultCode`：`SUCCESS=A0001`、`FAILED=A0002`；通用码 A0003~A0007；业务码 A1xxx=system。子系统错误码由子系统自定，不占 workspace 命名空间。
 - `Result.failed(IResultCode)` 统一出口；`BusinessException` 只抛业务可预期错误；系统异常由 `GlobalExceptionHandler` 兜底。
 - 业务异常 `warn`，只打 `code + msg`；系统异常 `error` + 堆栈；错误响应不返回堆栈/SQL。
 

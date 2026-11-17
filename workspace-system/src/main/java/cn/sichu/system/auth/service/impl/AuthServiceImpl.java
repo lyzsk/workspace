@@ -138,7 +138,7 @@ public class AuthServiceImpl implements IAuthService {
             throw new BusinessException(SystemCode.USER_NOT_FOUND);
         }
         if (!passwordEncoder.matches(form.getCurrentPassword(), user.getPassword())) {
-            throw new BusinessException(ResultCode.FAILED, "当前密码不正确");
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "当前密码不正确");
         }
         if (passwordEncoder.matches(form.getNewPassword(), user.getPassword())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "新密码不能与当前密码相同");

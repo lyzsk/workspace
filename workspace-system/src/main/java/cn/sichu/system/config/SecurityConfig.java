@@ -3,6 +3,7 @@ package cn.sichu.system.config;
 import cn.sichu.system.security.filter.JwtAuthenticationFilter;
 import cn.sichu.system.security.handler.RestAccessDeniedHandler;
 import cn.sichu.system.security.handler.RestAuthenticationEntryPoint;
+import cn.sichu.system.sync.InternalServiceAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +39,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final InternalServiceAuthenticationFilter internalServiceAuthenticationFilter;
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
     private final CorsProperties corsProperties;
@@ -56,7 +58,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> {
-                authorize.requestMatchers("/api/auth/login", "/error", "/ws/**")
+                authorize.requestMatchers("/api/internal/users/sync")
+                    .hasAuthority(InternalServiceAuthenticationFilter.AUTHORITY);
+                authorize.requestMatchers("/api/auth/login", "/actuator/health", "/error", "/ws/**")
                     .permitAll();
                 if (apiDocEnabled) {
                     authorize.requestMatchers("/v3/api-docs/**", "/doc.html", "/webjars/**",
@@ -67,6 +71,7 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler))
+            .addFilterBefore(internalServiceAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -81,7 +86,8 @@ public class SecurityConfig {
         configuration.setAllowedMethods(
             List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(
-            List.of("Authorization", "Content-Type", "X-Requested-With"));
+            List.of("Authorization", "Content-Type", "X-Requested-With", "X-Request-Id"));
+        configuration.setExposedHeaders(List.of("X-Request-Id"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

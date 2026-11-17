@@ -51,6 +51,11 @@ public class AuthController {
         return Result.success();
     }
 
+    @PostMapping("/touch")
+    public Result<Void> touch() {
+        return Result.success();
+    }
+
     @PostMapping("/logout")
     public Result<Void> logout(
         @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {

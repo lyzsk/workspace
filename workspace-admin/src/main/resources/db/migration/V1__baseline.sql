@@ -605,7 +605,7 @@ INSERT INTO system.sys_app
      sort_no, status, create_time)
 VALUES
     (3001, 'eap-tool-service', 'IES（设备信息维护系统）', 'ri:server-line',
-     '/apps/eap', '/eap/src/micro.ts', NULL, 'eap:access', 10, 1, now())
+     '/apps/eap-tool-service', '/eap/src/micro.ts', NULL, 'eap-tool-service:access', 10, 1, now())
 ON CONFLICT DO NOTHING;
 
 INSERT INTO system.sys_role
@@ -713,8 +713,8 @@ VALUES
      'sys:app:update', NULL, 2, 1, 1, now()),
     (205, 'workspace', 'apps:delete', 201, '应用删除', 'BUTTON', NULL, NULL,
      'sys:app:delete', NULL, 3, 1, 1, now()),
-    (206, 'workspace', 'apps:eap:access', 201, 'IES访问', 'BUTTON', NULL, NULL,
-     'eap:access', NULL, 4, 1, 1, now())
+    (206, 'workspace', 'apps:eap-tool-service:access', 201, 'IES访问', 'BUTTON', NULL, NULL,
+     'eap-tool-service:access', NULL, 4, 1, 1, now())
 ON CONFLICT DO NOTHING;
 
 -- 修正早期 seed_auth 里用户管理页的 permission/icon

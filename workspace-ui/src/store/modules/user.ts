@@ -33,6 +33,7 @@ export const useUserStore = defineStore(
         }
 
         if (typeof window !== "undefined") {
+            window.localStorage.removeItem("workspace-user");
             window.addEventListener("storage", (event) => {
                 if (event.key !== "workspace-user" || !event.newValue) {
                     return;
@@ -75,6 +76,7 @@ export const useUserStore = defineStore(
     {
         persist: {
             key: "workspace-user",
+            storage: sessionStorage,
         },
     },
 );

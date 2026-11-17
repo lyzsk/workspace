@@ -69,7 +69,13 @@
             </el-table-column>
             <el-table-column prop="message" label="信息" min-width="200" />
             <el-table-column prop="ip" label="IP" width="140" />
-            <el-table-column prop="userAgent" label="User-Agent" min-width="220" />
+            <el-table-column label="客户端" min-width="180">
+                <template #default="{ row }">
+                    <el-tooltip :content="row.userAgent" placement="top" :show-after="300">
+                        <span>{{ formatUserAgent(row.userAgent) }}</span>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
             <el-table-column label="登录时间" width="170" prop="loginTime" sortable="custom">
                 <template #default="{ row }">{{ formatTime(row.loginTime) }}</template>
             </el-table-column>
@@ -123,6 +129,7 @@ import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
 import type { LoginLogRow } from "@/types/system";
 import { formatTime } from "@/utils/format";
+import { formatUserAgent } from "@/utils/userAgent";
 
 defineOptions({ name: "SystemLoginLog" });
 

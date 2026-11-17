@@ -77,17 +77,34 @@ export const usePermissionStore = defineStore("permission", () => {
             if (!component) {
                 continue;
             }
+            const meta = {
+                title: menu.menuName,
+                permission: menu.permission,
+                ...(menu.component === "apps/detail/MicroFrontendHost"
+                    ? {
+                          appCode: menu.menuCode.replace(/^app:/, ""),
+                          basePath: menu.path,
+                      }
+                    : {}),
+            };
             removers.push(
                 router.addRoute("Layout", {
                     path: menu.path,
                     name: menu.menuCode,
                     component,
-                    meta: {
-                        title: menu.menuName,
-                        permission: menu.permission,
-                    },
+                    meta,
                 }),
             );
+            if (menu.component === "apps/detail/MicroFrontendHost") {
+                removers.push(
+                    router.addRoute("Layout", {
+                        path: `${menu.path}/:pathMatch(.*)*`,
+                        name: `${menu.menuCode}:deep`,
+                        component,
+                        meta,
+                    }),
+                );
+            }
         }
         loaded.value = true;
     }

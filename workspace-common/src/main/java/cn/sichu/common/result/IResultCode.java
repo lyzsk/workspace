@@ -7,7 +7,7 @@ package cn.sichu.common.result;
  */
 public interface IResultCode {
 
-    String getCode();
+    int getCode();
 
     String getMsg();
 }

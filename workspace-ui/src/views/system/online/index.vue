@@ -14,7 +14,13 @@
             <el-table-column prop="username" label="用户名" min-width="120" />
             <el-table-column prop="realName" label="姓名" min-width="100" />
             <el-table-column prop="ip" label="IP" width="140" />
-            <el-table-column prop="userAgent" label="User-Agent" min-width="240" />
+            <el-table-column label="客户端" min-width="180">
+                <template #default="{ row }">
+                    <el-tooltip :content="row.userAgent" placement="top" :show-after="300">
+                        <span>{{ formatUserAgent(row.userAgent) }}</span>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
             <el-table-column label="登录时间" width="170" prop="loginTime" sortable>
                 <template #default="{ row }">{{ formatTime(row.loginTime) }}</template>
             </el-table-column>
@@ -49,6 +55,7 @@ import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
 import type { OnlineUserRow } from "@/types/system";
 import { formatTime } from "@/utils/format";
+import { formatUserAgent } from "@/utils/userAgent";
 
 defineOptions({ name: "SystemOnline" });
 

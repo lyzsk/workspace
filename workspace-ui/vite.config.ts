@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
                     target: eapUiTarget,
                     changeOrigin: true,
                     ws: true,
+                    xfwd: true,
                     configure: (proxy) => {
                         proxy.on("proxyReq", (proxyReq) => {
                             proxyReq.setHeader("origin", eapUiOrigin);
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }) => {
                 "/api": {
                     target: env.VITE_API_PROXY || "http://localhost:61114",
                     changeOrigin: true,
+                    xfwd: true,
                     configure: (proxy) => {
                         proxy.on("proxyReq", (proxyReq) => {
                             proxyReq.setHeader("origin", devOrigin);

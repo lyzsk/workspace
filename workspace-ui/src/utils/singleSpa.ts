@@ -13,7 +13,13 @@ interface MicroRegistrationOptions {
     entry: string;
     styleEntry?: string;
     domElement: HTMLElement;
-    workspaceToken: string;
+    appCode: string;
+    theme: "light" | "dark";
+    locale: string;
+    user: { username: string; realName?: string };
+    getWorkspaceToken: () => string;
+    navigate: (path: string) => void;
+    onSessionExpired: () => void;
     onError: (message: string) => void;
 }
 
@@ -64,7 +70,15 @@ export async function registerMicroApplication(
             location.pathname.startsWith(`${options.path}/`),
         customProps: {
             domElement: options.domElement,
-            workspaceToken: options.workspaceToken,
+            basePath: options.path,
+            appCode: options.appCode,
+            mode: "micro",
+            getWorkspaceToken: options.getWorkspaceToken,
+            theme: options.theme,
+            locale: options.locale,
+            user: options.user,
+            navigate: options.navigate,
+            onSessionExpired: options.onSessionExpired,
         },
     });
 

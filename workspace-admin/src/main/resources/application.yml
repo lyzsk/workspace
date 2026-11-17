@@ -9,13 +9,9 @@ workspace:
   jwt:
     secret: ${JWT_SECRET:dev-only-workspace-secret-0123456789abcdef}
     issuer: workspace
-    access-token-ttl: 30m
-  eap-tool-service:
-    ui-url: ${EAP_TOOL_SERVICE_UI_URL:/eap/}
-    ticket-secret: ${EAP_TOOL_SERVICE_TICKET_SECRET:dev-only-eap-tool-service-ticket-secret-0123456789abcdef}
-    issuer: workspace
-    audience: eap-tool-service
-    ticket-ttl: 60s
+    access-token-ttl: 12h
+  session:
+    idle-timeout: 30m
   generator:
     enabled: false
   login:

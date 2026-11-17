@@ -34,7 +34,6 @@ public class SysAppForm {
     @Size(max = 500)
     private String styleEntry;
 
-    @NotBlank(message = "应用访问权限码不能为空")
     @Size(max = 100)
     private String accessPermission;
 

@@ -1,20 +1,22 @@
 package cn.sichu.system.app.service.impl;
 
+import cn.sichu.common.base.BaseImpl;
 import cn.sichu.common.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.app.model.form.SysAppForm;
 import cn.sichu.system.app.model.vo.SysAppVO;
 import cn.sichu.system.app.service.ISysAppService;
-import cn.sichu.common.base.BaseImpl;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.menu.entity.SysMenu;
 import cn.sichu.system.menu.mapper.SysMenuMapper;
+import cn.sichu.system.role.entity.SysRoleMenu;
+import cn.sichu.system.role.mapper.SysRoleMenuMapper;
 import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.system.security.util.SecurityUtils;
-import org.springframework.security.access.AccessDeniedException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +32,11 @@ import java.util.List;
 public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements ISysAppService {
 
     private static final String APP_WORKSPACE = "workspace";
+    private static final String APPS_MENU_CODE = "apps";
 
     private final SysAppMapper appMapper;
     private final SysMenuMapper menuMapper;
+    private final SysRoleMenuMapper roleMenuMapper;
 
     @Override
     public List<SysAppVO> listAll() {
@@ -70,6 +74,7 @@ public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements
         SysApp app = new SysApp();
         applyForm(app, form);
         appMapper.insert(app);
+        createAccessMenu(app);
         return app.getId();
     }
 
@@ -86,15 +91,17 @@ public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements
         if (!app.getCode().equals(form.getCode().trim())) {
             Long menus = menuMapper.selectCount(
                 new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, app.getCode()));
-            if (menus > 0) {
+            if (menus > 0 || findAccessMenu(app.getCode()) != null) {
                 throw new BusinessException(SystemCode.APP_CODE_IMMUTABLE);
             }
         }
         validate(form);
         checkCodeUnique(form.getCode(), id);
         checkBasePathUnique(form.getBasePath(), id);
+        String oldCode = app.getCode();
         applyForm(app, form);
         appMapper.updateById(app);
+        upsertAccessMenu(app, findAccessMenu(oldCode));
     }
 
     @Override
@@ -112,6 +119,12 @@ public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements
         if (menus > 0) {
             throw new BusinessException(SystemCode.APP_HAS_MENUS);
         }
+        SysMenu accessMenu = findAccessMenu(app.getCode());
+        if (accessMenu != null) {
+            roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
+                .eq(SysRoleMenu::getMenuId, accessMenu.getId()));
+            menuMapper.deleteById(accessMenu.getId());
+        }
         appMapper.deleteById(id);
     }
 
@@ -128,10 +141,52 @@ public class SysAppServiceImpl extends BaseImpl<SysAppMapper, SysApp> implements
         app.setBasePath(normalizeBasePath(form.getBasePath()));
         app.setModuleEntry(form.getModuleEntry().trim());
         app.setStyleEntry(form.getStyleEntry() == null ? null : form.getStyleEntry().trim());
-        app.setAccessPermission(form.getAccessPermission().trim());
+        app.setAccessPermission(app.getCode() + ":access");
         app.setSortNo(form.getSortNo() == null ? 0 : form.getSortNo());
         app.setStatus(form.getStatus() == null ? 1 : form.getStatus());
         app.setRemark(form.getRemark());
+    }
+
+    private void createAccessMenu(SysApp app) {
+        SysMenu root = menuMapper.selectOne(new LambdaQueryWrapper<SysMenu>()
+            .eq(SysMenu::getAppCode, APP_WORKSPACE)
+            .eq(SysMenu::getMenuCode, APPS_MENU_CODE));
+        if (root == null) {
+            throw new BusinessException(SystemCode.MENU_NOT_FOUND, "应用管理菜单不存在");
+        }
+        SysMenu menu = new SysMenu();
+        menu.setParentId(root.getId());
+        applyAccessMenu(menu, app);
+        menuMapper.insert(menu);
+    }
+
+    private void upsertAccessMenu(SysApp app, SysMenu menu) {
+        if (menu == null) {
+            createAccessMenu(app);
+            return;
+        }
+        applyAccessMenu(menu, app);
+        menuMapper.updateById(menu);
+    }
+
+    private void applyAccessMenu(SysMenu menu, SysApp app) {
+        menu.setAppCode(APP_WORKSPACE);
+        menu.setMenuCode("apps:" + app.getCode() + ":access");
+        menu.setMenuName(app.getName() + "访问");
+        menu.setMenuType("BUTTON");
+        menu.setPath(null);
+        menu.setComponent(null);
+        menu.setPermission(app.getAccessPermission());
+        menu.setIcon(null);
+        menu.setSortNo(app.getSortNo());
+        menu.setHidden(0);
+        menu.setStatus(1);
+    }
+
+    private SysMenu findAccessMenu(String code) {
+        return menuMapper.selectOne(new LambdaQueryWrapper<SysMenu>()
+            .eq(SysMenu::getAppCode, APP_WORKSPACE)
+            .eq(SysMenu::getMenuCode, "apps:" + code + ":access"));
     }
 
     private String normalizeBasePath(String basePath) {
