@@ -121,7 +121,7 @@
 | `host.session.expired` | 宿主 → app | — | 会话失效 |
 | `host.logout` | 宿主 → app | — | 平台登出 |
 | `app.ready` | app → 宿主 | — | 应用初始化完成 |
-| `app.route.changed` | app → 宿主 | `{ path }` | 子应用路由变化 |
+| `app.route.changed` | app → 宿主 | `{ path, title, titles }` | 子应用路由变化，携带当前页面标题及完整层级标题 |
 | `app.theme.changed` | app → 宿主 | `{ theme }` | 子应用切换主题 |
 | `app.logout` | app → 宿主 | — | 子应用请求退出 |
 | `app.session.expired` | app → 宿主 | — | 子应用会话失效 |

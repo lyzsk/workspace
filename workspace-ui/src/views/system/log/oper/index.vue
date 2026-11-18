@@ -108,7 +108,7 @@
             </template>
         </TableCard>
 
-        <el-dialog v-model="detailVisible" title="操作日志详情" width="720px">
+        <el-dialog draggable v-model="detailVisible" title="操作日志详情" width="720px">
             <el-descriptions :column="2" border>
                 <el-descriptions-item label="模块">{{ current?.module }}</el-descriptions-item>
                 <el-descriptions-item label="操作">{{ current?.operation }}</el-descriptions-item>

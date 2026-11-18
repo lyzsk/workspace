@@ -65,8 +65,15 @@
         </aside>
 
         <div class="main">
-            <template v-if="!isAppMode">
-                <header class="header">
+            <header class="header" :class="{ 'app-header': isAppMode }">
+                    <div
+                        v-if="isAppMode"
+                        class="app-workspace-brand"
+                        @click="goHome"
+                    >
+                        <img src="/apple-touch-icon.png" alt="Workspace" />
+                        <span>{{ t("app.name") }}</span>
+                    </div>
                     <div class="header-left">
                         <button
                             class="icon-btn"
@@ -186,8 +193,11 @@
                     </div>
                 </header>
 
-                <WorkTabs :title="currentTab.title" :icon="currentTab.icon" />
-            </template>
+                <WorkTabs
+                    v-if="!isAppMode"
+                    :title="currentTab.title"
+                    :icon="currentTab.icon"
+                />
 
             <main class="content" :class="{ 'content-full': isAppMode }">
                 <router-view :key="dataRefreshKey" />
@@ -259,6 +269,16 @@ function findTrail(
 }
 
 const breadcrumbs = computed<Crumb[]>(() => {
+    if (isAppMode.value) {
+        const result: Crumb[] = [{ title: t("app.name") }];
+        if (appStore.activeAppName) {
+            result.push({ title: appStore.activeAppName });
+        }
+        for (const title of appStore.activeAppPageTitles) {
+            result.push({ title });
+        }
+        return result;
+    }
     if (route.path === "/dashboard") {
         return [{ title: t("menu.dashboard"), icon: "HomeFilled" }];
     }
@@ -497,6 +517,36 @@ function toggleTheme(event: MouseEvent) {
     background: var(--panel-bg);
 }
 
+.app-workspace-brand {
+    display: flex;
+    flex: 0 0 230px;
+    align-items: center;
+    align-self: stretch;
+    gap: 10px;
+    margin-left: -20px;
+    padding-left: 20px;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.app-workspace-brand img {
+    width: 32px;
+    height: 32px;
+}
+
+.app-workspace-brand span {
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-header .header-left {
+    flex: 1;
+    padding-left: 20px;
+}
+
 .header-left {
     display: flex;
     align-items: center;
@@ -598,6 +648,7 @@ function toggleTheme(event: MouseEvent) {
 }
 
 .content.content-full {
+    min-height: 0;
     padding: 0;
     overflow: hidden;
 }

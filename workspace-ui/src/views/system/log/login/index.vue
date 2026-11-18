@@ -103,7 +103,7 @@
             </template>
         </TableCard>
 
-        <el-dialog v-model="detailVisible" title="登录日志详情" width="620px">
+        <el-dialog draggable v-model="detailVisible" title="登录日志详情" width="620px">
             <el-descriptions :column="1" border>
                 <el-descriptions-item label="用户名">{{ current?.username }}</el-descriptions-item>
                 <el-descriptions-item label="状态">

@@ -110,7 +110,7 @@
                 </template>
             </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dataTableVisible"
             :title="`字典数据 - ${selectedType?.dictName || ''}`"
             width="1000px"
@@ -194,7 +194,7 @@
             </TableCard>
         </el-dialog>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="typeDialogVisible"
             :title="editingTypeId ? '编辑字典类型' : '新增字典类型'"
             width="620px"
@@ -221,7 +221,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dataDialogVisible"
             :title="editingDataId ? '编辑字典数据' : '新增字典数据'"
             width="620px"

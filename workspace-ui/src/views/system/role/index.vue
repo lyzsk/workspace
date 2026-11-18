@@ -126,7 +126,7 @@
             </template>
         </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dialogVisible"
             :title="editingId ? '编辑角色' : '新增角色'"
             width="720px"
@@ -434,9 +434,10 @@ function resetForm() {
     isSelectAll.value = false;
 }
 
-function openCreate() {
+async function openCreate() {
     editingId.value = null;
     resetForm();
+    menuOptions.value = await getMenuTree(true);
     dialogVisible.value = true;
 }
 
@@ -453,8 +454,13 @@ async function openEdit(row: RoleRow) {
         menuIds: [],
         deptIds: row.deptIds ?? [],
     } satisfies RoleForm);
+    const [menus, menuIds] = await Promise.all([
+        getMenuTree(true),
+        getRoleMenuIds(row.id),
+    ]);
+    menuOptions.value = menus;
+    form.menuIds = menuIds;
     dialogVisible.value = true;
-    form.menuIds = await getRoleMenuIds(row.id);
     await nextTick();
     menuTreeRef.value?.setCheckedKeys(form.menuIds, false);
 }
@@ -575,7 +581,6 @@ onMounted(async () => {
     await Promise.all([
         load(),
         getDeptList().then((items) => (deptOptions.value = items)),
-        getMenuTree(true).then((items) => (menuOptions.value = items)),
     ]);
 });
 </script>

@@ -100,7 +100,7 @@
 </template>
         </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dialogVisible"
             :title="editingId ? '编辑菜单' : '新增菜单'"
             width="620px"

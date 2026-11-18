@@ -9,6 +9,9 @@ export const useAppStore = defineStore(
     () => {
         const isDark = ref(true);
         const locale = ref<Locale>("zh-CN");
+        const activeAppName = ref("");
+        const activeAppPageTitles = ref<string[]>([]);
+        const activeAppPagePath = ref("");
 
         function applyTheme(silent = false) {
             document.documentElement.classList.toggle("dark", isDark.value);
@@ -36,7 +39,36 @@ export const useAppStore = defineStore(
             });
         }
 
-        return { isDark, locale, applyTheme, toggleTheme, setLocale };
+        function setActiveApp(name: string) {
+            activeAppName.value = name;
+            activeAppPageTitles.value = [];
+            activeAppPagePath.value = "";
+        }
+
+        function setActiveAppPage(titles: string[], path: string) {
+            activeAppPageTitles.value = titles;
+            activeAppPagePath.value = path;
+        }
+
+        function clearActiveApp() {
+            activeAppName.value = "";
+            activeAppPageTitles.value = [];
+            activeAppPagePath.value = "";
+        }
+
+        return {
+            isDark,
+            locale,
+            activeAppName,
+            activeAppPageTitles,
+            activeAppPagePath,
+            applyTheme,
+            toggleTheme,
+            setLocale,
+            setActiveApp,
+            setActiveAppPage,
+            clearActiveApp,
+        };
     },
     {
         persist: {

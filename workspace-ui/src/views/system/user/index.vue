@@ -118,7 +118,7 @@
             </template>
         </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dialogVisible"
             :title="editingId ? '编辑用户' : '新增用户'"
             width="620px"

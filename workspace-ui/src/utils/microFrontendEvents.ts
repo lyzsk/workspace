@@ -25,6 +25,8 @@ export interface MicroFrontendEventDetail {
     message?: string;
     theme?: "light" | "dark";
     locale?: string;
+    title?: string;
+    titles?: string[];
 }
 
 export function emitMicroFrontendEvent(

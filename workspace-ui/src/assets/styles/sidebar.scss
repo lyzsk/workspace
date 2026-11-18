@@ -45,6 +45,28 @@
     margin-left: auto;
 }
 
+.sidebar.app-rail .logo img {
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.sidebar.app-rail .el-menu-item {
+    justify-content: center;
+    padding: 0;
+}
+
+.sidebar.app-rail .el-menu-item .el-menu-tooltip__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+}
+
+.sidebar.app-rail .el-menu-item .menu-icon {
+    margin: 0;
+}
+
 .sidebar-scroll {
     height: calc(100% - 60px);
 }

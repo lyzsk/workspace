@@ -52,7 +52,7 @@
         </div>
         <el-empty v-else description="暂无文档，请新建或让其他用户共享给你" />
 
-        <el-dialog v-model="createVisible" title="新建文档" width="420px">
+        <el-dialog draggable v-model="createVisible" title="新建文档" width="420px">
             <el-input v-model.trim="newTitle" placeholder="请输入文档标题" maxlength="200" />
             <template #footer>
                 <el-button @click="createVisible = false">取消</el-button>
@@ -60,7 +60,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="shareVisible" title="共享文档" width="720px">
+        <el-dialog draggable v-model="shareVisible" title="共享文档" width="720px">
             <div class="share-form">
                 <el-select v-model="shareUserId" placeholder="选择用户" style="width: 220px">
                     <el-option
@@ -91,7 +91,7 @@
             </el-table>
         </el-dialog>
 
-        <el-dialog v-model="importVisible" title="导入 JSON" width="620px">
+        <el-dialog draggable v-model="importVisible" title="导入 JSON" width="620px">
             <el-upload
                 accept=".json"
                 :auto-upload="false"

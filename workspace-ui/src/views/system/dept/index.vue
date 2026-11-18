@@ -66,7 +66,7 @@
             </template>
         </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dialogVisible"
             :title="editingId ? '编辑部门' : '新增部门'"
             width="620px"

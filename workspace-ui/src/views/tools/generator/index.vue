@@ -70,7 +70,7 @@
             </el-table>
         </el-card>
 
-        <el-dialog v-model="previewVisible" title="代码预览" width="1000px">
+        <el-dialog draggable v-model="previewVisible" title="代码预览" width="1000px">
             <el-tabs v-model="activeFile" tab-position="left" class="preview-tabs">
                 <el-tab-pane
                     v-for="(content, path) in files"

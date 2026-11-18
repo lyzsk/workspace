@@ -68,7 +68,7 @@
             </template>
         </TableCard>
 
-        <el-dialog v-model="dialogVisible" title="新增缓存" width="420px">
+        <el-dialog draggable v-model="dialogVisible" title="新增缓存" width="420px">
             <el-form :model="form" label-width="100px">
                 <el-form-item label="缓存 Key" required>
                     <el-input v-model.trim="form.key" />

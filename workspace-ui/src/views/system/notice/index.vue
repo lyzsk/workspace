@@ -106,7 +106,7 @@
             </template>
         </TableCard>
 
-        <el-dialog v-model="dialogVisible" title="新增通知" width="620px">
+        <el-dialog draggable v-model="dialogVisible" title="新增通知" width="620px">
             <el-form :model="form" label-width="100px">
                 <el-form-item label="标题" required>
                     <el-input v-model.trim="form.title" maxlength="200" />
@@ -192,7 +192,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="publishVisible" title="发布通知" width="420px">
+        <el-dialog draggable v-model="publishVisible" title="发布通知" width="420px">
             <el-form :model="publishForm" label-width="100px">
                 <el-form-item label="业务链接">
                     <el-input
@@ -218,7 +218,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="attachmentVisible" title="上传附件" width="620px">
+        <el-dialog draggable v-model="attachmentVisible" title="上传附件" width="620px">
             <el-upload
                 accept=".txt,.pdf,.png,.jpg,.jpeg,.docx,.xlsx,.pptx"
                 :auto-upload="false"

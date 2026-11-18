@@ -102,7 +102,7 @@
             </template>
         </TableCard>
 
-        <el-dialog
+        <el-dialog draggable
             v-model="dialogVisible"
             :title="editingId ? '修改任务' : '新增任务'"
             width="620px"
@@ -148,7 +148,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="logVisible" title="调度日志" width="1000px">
+        <el-dialog draggable v-model="logVisible" title="调度日志" width="1000px">
             <TableCard @refresh="loadLogs">
                 <template #default="{ stripe, border, headerBackground, size }">
                     <Table

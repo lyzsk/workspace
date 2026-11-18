@@ -1,0 +1,9 @@
+UPDATE system.sys_menu AS access_menu
+SET parent_id = apps.id
+FROM system.sys_menu AS apps
+WHERE access_menu.menu_code LIKE 'apps:%:access'
+  AND apps.menu_code = 'apps'
+  AND apps.app_code = 'workspace'
+  AND apps.is_deleted = 0
+  AND access_menu.is_deleted = 0
+  AND access_menu.parent_id <> apps.id;

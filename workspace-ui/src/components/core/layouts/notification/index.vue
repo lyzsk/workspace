@@ -92,7 +92,7 @@
         </div>
     </div>
 
-    <el-dialog v-model="settingsVisible" title="免打扰设置" width="420px">
+    <el-dialog draggable v-model="settingsVisible" title="免打扰设置" width="420px">
         <el-form label-width="100px">
             <el-form-item label="启用免打扰">
                 <el-switch

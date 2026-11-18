@@ -54,6 +54,15 @@ function onMicroEvent(detail: MicroFrontendEventDetail) {
     if (detail.version !== 1 || detail.appCode !== app.value?.code) {
         return;
     }
+    if (detail.type === "app.route.changed") {
+        const titles = detail.titles?.length
+            ? detail.titles
+            : detail.title
+              ? [detail.title]
+              : [];
+        appStore.setActiveAppPage(titles, detail.path);
+        return;
+    }
     if (detail.type === "app.theme.changed" && detail.theme) {
         if (appStore.isDark !== (detail.theme === "dark")) {
             appStore.isDark = detail.theme === "dark";
@@ -179,6 +188,7 @@ async function load() {
             throw new Error("应用路由缺少 basePath");
         }
         app.value = await getAppRuntime(basePath);
+        appStore.setActiveApp(app.value.name);
         await nextTick();
         if (app.value) {
             await enter();
@@ -206,6 +216,7 @@ onMounted(() => {
 });
 onUnmounted(async () => {
     disposed = true;
+    appStore.clearActiveApp();
     offMicroEvent?.();
     offMicroEvent = null;
     await cleanupCurrentMicro();
@@ -223,6 +234,22 @@ onUnmounted(async () => {
     min-height: 0;
     background: var(--default-bg-color, var(--app-bg, #fafbfc));
     color: var(--art-gray-900, var(--text, #383853));
+}
+
+.micro-container :deep(.app-layout) {
+    height: 100%;
+    min-height: 0;
+}
+
+.micro-container :deep(.layout-sidebar),
+.micro-container :deep(.layout-sidebar .menu-left),
+.micro-container :deep(#app-main) {
+    height: 100%;
+}
+
+.micro-container :deep(#app-header),
+.micro-container :deep(.layout-sidebar .menu-left > .header) {
+    display: none;
 }
 
 .app-error {
