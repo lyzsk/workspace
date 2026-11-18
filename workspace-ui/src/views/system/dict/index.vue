@@ -92,7 +92,7 @@
                                 {{ formatTime(row.createTime) }}
                             </template>
                         </el-table-column>
-                        <el-table-column label="操作" width="90" align="center" class-name="action-cell">
+                        <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                             <template #default="{ row }">
                                 <ButtonTable
                                     v-permission="'sys:dict:update'"
@@ -113,7 +113,7 @@
         <el-dialog
             v-model="dataTableVisible"
             :title="`字典数据 - ${selectedType?.dictName || ''}`"
-            width="1100px"
+            width="1000px"
         >
             <TableCard @refresh="loadData">
                 <template #actions>
@@ -164,7 +164,7 @@
                                 {{ formatTime(row.createTime) }}
                             </template>
                         </el-table-column>
-                        <el-table-column label="操作" width="90" align="center" class-name="action-cell">
+                        <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                             <template #default="{ row }">
                                 <ButtonTable
                                     v-permission="'sys:dict:update'"
@@ -185,9 +185,10 @@
                         v-model:current-page="dataQuery.pageNum"
                         v-model:page-size="dataQuery.pageSize"
                         :total="Number(dataTotal)"
-                        layout="total, prev, pager, next"
+                        layout="total, sizes, prev, pager, next"
                         background
                         @current-change="loadData"
+                        @size-change="loadData"
                     />
                 </template>
             </TableCard>
@@ -196,9 +197,9 @@
         <el-dialog
             v-model="typeDialogVisible"
             :title="editingTypeId ? '编辑字典类型' : '新增字典类型'"
-            width="480px"
+            width="620px"
         >
-            <el-form :model="typeForm" label-width="90px">
+            <el-form :model="typeForm" label-width="100px">
                 <el-form-item label="字典类型" required>
                     <el-input v-model.trim="typeForm.dictType" placeholder="如 sys_user_status" />
                 </el-form-item>
@@ -223,9 +224,9 @@
         <el-dialog
             v-model="dataDialogVisible"
             :title="editingDataId ? '编辑字典数据' : '新增字典数据'"
-            width="480px"
+            width="620px"
         >
-            <el-form :model="dataForm" label-width="90px">
+            <el-form :model="dataForm" label-width="100px">
                 <el-form-item label="显示文本" required>
                     <el-input v-model.trim="dataForm.label" />
                 </el-form-item>

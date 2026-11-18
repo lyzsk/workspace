@@ -76,25 +76,19 @@
                             {{ formatTime(row.createTime) }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="170" align="center">
+                    <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                         <template #default="{ row }">
-                            <el-button
+                            <ButtonTable
                                 v-if="row.status === 0"
-                                type="primary"
-                                link
+                                type="view"
                                 @click="openAttachment(row)"
-                            >
-                                附件
-                            </el-button>
-                            <el-button
+                            />
+                            <ButtonTable
                                 v-if="row.status === 0"
                                 v-permission="'system:notice:publish'"
-                                type="primary"
-                                link
+                                type="add"
                                 @click="openPublish(row)"
-                            >
-                                发布
-                            </el-button>
+                            />
                         </template>
                     </el-table-column>
                 </Table>
@@ -113,7 +107,7 @@
         </TableCard>
 
         <el-dialog v-model="dialogVisible" title="新增通知" width="620px">
-            <el-form :model="form" label-width="90px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="标题" required>
                     <el-input v-model.trim="form.title" maxlength="200" />
                 </el-form-item>
@@ -198,7 +192,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="publishVisible" title="发布通知" width="520px">
+        <el-dialog v-model="publishVisible" title="发布通知" width="420px">
             <el-form :model="publishForm" label-width="100px">
                 <el-form-item label="业务链接">
                     <el-input
@@ -224,7 +218,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="attachmentVisible" title="上传附件" width="460px">
+        <el-dialog v-model="attachmentVisible" title="上传附件" width="620px">
             <el-upload
                 accept=".txt,.pdf,.png,.jpg,.jpeg,.docx,.xlsx,.pptx"
                 :auto-upload="false"
@@ -240,6 +234,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
+import ButtonTable from "@/components/core/tables/button-table/index.vue";
 import SearchCard from "@/components/core/tables/search-card/index.vue";
 import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";

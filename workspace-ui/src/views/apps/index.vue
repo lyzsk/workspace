@@ -47,7 +47,7 @@
                     </el-table-column>
                     <el-table-column
                         label="操作"
-                        width="110"
+                        width="90"
                         fixed="right"
                         align="center"
                         class-name="action-cell"
@@ -72,9 +72,9 @@
         <el-dialog
             v-model="dialogVisible"
             :title="editingId ? '编辑应用' : '新增应用'"
-            width="600px"
+            width="620px"
         >
-            <el-form :model="form" label-width="120px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="应用编码" required>
                     <el-input
                         v-model.trim="form.code"

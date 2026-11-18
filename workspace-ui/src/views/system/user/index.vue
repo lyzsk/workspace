@@ -87,7 +87,7 @@
             <el-table-column label="创建时间" width="170" prop="createTime" sortable="custom">
                 <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
             </el-table-column>
-            <el-table-column label="操作" width="100" fixed="right" align="center" class-name="action-cell">
+            <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                 <template #default="{ row }">
                     <template v-if="row.username !== 'admin'">
                     <ButtonTable
@@ -121,9 +121,9 @@
         <el-dialog
             v-model="dialogVisible"
             :title="editingId ? '编辑用户' : '新增用户'"
-            width="540px"
+            width="620px"
         >
-            <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+            <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
                 <el-form-item label="用户名" prop="username">
                     <el-input v-model.trim="form.username" />
                 </el-form-item>

@@ -55,7 +55,7 @@
                             {{ formatTime(row.updateTime) }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="90" align="center" class-name="action-cell">
+                    <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                         <template #default="{ row }">
                             <ButtonTable
                                 v-permission="'sys:monitor:cache'"
@@ -68,8 +68,8 @@
             </template>
         </TableCard>
 
-        <el-dialog v-model="dialogVisible" title="新增缓存" width="480px">
-            <el-form :model="form" label-width="90px">
+        <el-dialog v-model="dialogVisible" title="新增缓存" width="420px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="缓存 Key" required>
                     <el-input v-model.trim="form.key" />
                 </el-form-item>

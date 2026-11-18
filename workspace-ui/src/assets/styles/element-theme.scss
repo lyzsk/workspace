@@ -1,0 +1,23 @@
+@use "sass:color";
+
+$primary: #5d87ff;
+
+:root {
+    --el-color-primary: #{$primary};
+    --el-color-primary-light-3: #{color.mix(#ffffff, $primary, 30%)};
+    --el-color-primary-light-5: #{color.mix(#ffffff, $primary, 50%)};
+    --el-color-primary-light-7: #{color.mix(#ffffff, $primary, 70%)};
+    --el-color-primary-light-8: #{color.mix(#ffffff, $primary, 80%)};
+    --el-color-primary-light-9: #{color.mix(#ffffff, $primary, 90%)};
+    --el-color-primary-dark-2: #{color.mix(#000000, $primary, 20%)};
+}
+
+html.dark {
+    --el-color-primary: #{$primary};
+    --el-color-primary-light-3: #{color.mix(#141414, $primary, 30%)};
+    --el-color-primary-light-5: #{color.mix(#141414, $primary, 50%)};
+    --el-color-primary-light-7: #{color.mix(#141414, $primary, 70%)};
+    --el-color-primary-light-8: #{color.mix(#141414, $primary, 80%)};
+    --el-color-primary-light-9: #{color.mix(#141414, $primary, 90%)};
+    --el-color-primary-dark-2: #{color.mix(#ffffff, $primary, 20%)};
+}

@@ -4,6 +4,7 @@ import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "element-plus/theme-chalk/dark/css-vars.css";
+import "./assets/styles/element-theme.scss";
 import Particles from "@tsparticles/vue3";
 import { loadFull } from "tsparticles";
 import App from "./App.vue";

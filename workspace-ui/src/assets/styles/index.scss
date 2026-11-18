@@ -70,7 +70,7 @@ button {
 }
 
 .text-btn.danger {
-    color: #f56c6c;
+    color: var(--art-error);
 }
 
 .page-card {
@@ -291,7 +291,7 @@ button {
 }
 
 .table-action.danger {
-    color: #f56c6c;
+    color: var(--art-error);
 }
 
 .more-btn {

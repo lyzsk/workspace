@@ -76,7 +76,7 @@
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right" align="center" class-name="action-cell">
+            <el-table-column label="操作" width="140" fixed="right" align="center" class-name="action-cell">
                 <template #default="{ row }">
                     <ButtonTable
                         v-if="row.menuType !== 'BUTTON'"
@@ -105,7 +105,7 @@
             :title="editingId ? '编辑菜单' : '新增菜单'"
             width="620px"
         >
-            <el-form :model="form" label-width="90px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="上级菜单">
                     <el-tree-select
                         v-model="form.parentId"

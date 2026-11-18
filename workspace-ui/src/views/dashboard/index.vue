@@ -68,7 +68,7 @@ const userStore = useUserStore();
 }
 
 .card-value.green {
-    color: #16a34a;
+    color: var(--el-color-success);
 }
 
 :deep(.el-card) {

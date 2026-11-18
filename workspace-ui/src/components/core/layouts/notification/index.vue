@@ -435,12 +435,12 @@ onUnmounted(stop);
 
 .message-icon {
     background: rgb(103 194 58 / 12%);
-    color: #67c23a;
+    color: var(--el-color-success);
 }
 
 .todo-icon {
     background: rgb(240 173 78 / 14%);
-    color: #d99024;
+    color: var(--el-color-warning);
 }
 
 .item-content {

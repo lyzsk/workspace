@@ -60,7 +60,7 @@
             </template>
         </el-dialog>
 
-        <el-dialog v-model="shareVisible" title="共享文档" width="520px">
+        <el-dialog v-model="shareVisible" title="共享文档" width="720px">
             <div class="share-form">
                 <el-select v-model="shareUserId" placeholder="选择用户" style="width: 220px">
                     <el-option
@@ -79,22 +79,19 @@
             <el-table :data="members" size="small">
                 <el-table-column prop="realName" label="用户" />
                 <el-table-column prop="permission" label="权限" width="100" />
-                <el-table-column label="操作" width="90">
+                <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                     <template #default="{ row }">
-                        <el-button
+                        <ButtonTable
                             v-if="row.userId !== current?.ownerId"
-                            link
-                            type="danger"
+                            type="delete"
                             @click="removeMember(row.userId)"
-                        >
-                            移除
-                        </el-button>
+                        />
                     </template>
                 </el-table-column>
             </el-table>
         </el-dialog>
 
-        <el-dialog v-model="importVisible" title="导入 JSON" width="500px">
+        <el-dialog v-model="importVisible" title="导入 JSON" width="620px">
             <el-upload
                 accept=".json"
                 :auto-upload="false"
@@ -126,6 +123,7 @@ import {
     type DocumentMember,
 } from "@/api/system/document";
 import { pageUsers, type UserRow } from "@/api/system/user";
+import ButtonTable from "@/components/core/tables/button-table/index.vue";
 import { DocumentSocket } from "@/utils/documentSocket";
 import { useUserStore } from "@/store/modules/user";
 

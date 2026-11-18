@@ -37,7 +37,7 @@
                     </el-table-column>
                     <el-table-column
                         label="操作"
-                        width="150"
+                        width="140"
                         fixed="right"
                         align="center"
                         class-name="action-cell"
@@ -69,9 +69,9 @@
         <el-dialog
             v-model="dialogVisible"
             :title="editingId ? '编辑部门' : '新增部门'"
-            width="500px"
+            width="620px"
         >
-            <el-form :model="form" label-width="90px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="上级部门">
                     <el-tree-select
                         v-model="form.parentId"

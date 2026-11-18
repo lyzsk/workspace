@@ -30,7 +30,7 @@
             <el-table-column label="过期时间" width="170">
                 <template #default="{ row }">{{ formatTime(row.expiresAt) }}</template>
             </el-table-column>
-            <el-table-column label="操作" width="80" fixed="right" align="center" class-name="action-cell">
+            <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
                 <template #default="{ row }">
                         <ButtonTable
                             v-permission="'sys:online:kick'"

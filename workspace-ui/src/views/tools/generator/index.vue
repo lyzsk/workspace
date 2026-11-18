@@ -2,7 +2,7 @@
     <div class="generator-page">
         <el-card shadow="never">
             <template #header>代码生成</template>
-            <el-form :model="form" label-width="110px">
+            <el-form :model="form" label-width="100px">
                 <div class="generator-grid">
                     <el-form-item label="Schema" required>
                         <el-input v-model.trim="form.schemaName" @blur="loadTables" />
@@ -70,7 +70,7 @@
             </el-table>
         </el-card>
 
-        <el-dialog v-model="previewVisible" title="代码预览" width="90%">
+        <el-dialog v-model="previewVisible" title="代码预览" width="1000px">
             <el-tabs v-model="activeFile" tab-position="left" class="preview-tabs">
                 <el-tab-pane
                     v-for="(content, path) in files"

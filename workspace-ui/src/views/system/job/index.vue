@@ -69,7 +69,7 @@
                             {{ formatTime(row.createTime) }}
                         </template>
                     </el-table-column>
-                    <el-table-column label="操作" width="170" align="center" class-name="action-cell">
+                    <el-table-column label="操作" width="140" fixed="right" align="center" class-name="action-cell">
                         <template #default="{ row }">
                             <ButtonTable
                                 v-permission="'sys:job:update'"
@@ -105,9 +105,9 @@
         <el-dialog
             v-model="dialogVisible"
             :title="editingId ? '修改任务' : '新增任务'"
-            width="560px"
+            width="620px"
         >
-            <el-form :model="form" label-width="110px">
+            <el-form :model="form" label-width="100px">
                 <el-form-item label="任务名称" required>
                     <el-input v-model.trim="form.jobName" />
                 </el-form-item>
@@ -189,9 +189,10 @@
                         v-model:current-page="logQuery.pageNum"
                         v-model:page-size="logQuery.pageSize"
                         :total="Number(logTotal)"
-                        layout="total, prev, pager, next"
+                        layout="total, sizes, prev, pager, next"
                         background
                         @current-change="loadLogs"
+                        @size-change="loadLogs"
                     />
                 </template>
             </TableCard>

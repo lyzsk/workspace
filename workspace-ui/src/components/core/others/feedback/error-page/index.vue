@@ -53,11 +53,11 @@ withDefaults(
 }
 
 .error-code.error {
-    color: #f56c6c;
+    color: var(--art-error);
 }
 
 .error-code.success {
-    color: #22c55e;
+    color: var(--el-color-success);
 }
 
 .error-card h2 {
