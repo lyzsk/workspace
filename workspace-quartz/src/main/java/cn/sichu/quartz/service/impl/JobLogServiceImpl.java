@@ -29,15 +29,19 @@ public class JobLogServiceImpl extends BaseImpl<SysJobLogMapper, SysJobLog>
 
     @Override
     public PageResult<SysJobLogVO> page(SysJobQuery query) {
-        Page<SysJobLog> page = new Page<>(query.getPageNum(), query.getPageSize());
+        Page<SysJobLog> page =
+            new Page<>(query.getPageNum(), query.getPageSize());
         LambdaQueryWrapper<SysJobLog> wrapper =
-            new LambdaQueryWrapper<SysJobLog>().like(StringUtils.hasText(query.getJobName()),
-                    SysJobLog::getJobName, query.getJobName())
-                .eq(query.getStatus() != null, SysJobLog::getStatus, query.getStatus())
-                .orderByDesc(SysJobLog::getStartTime);
+            new LambdaQueryWrapper<SysJobLog>().like(
+                    StringUtils.hasText(query.getJobName()), SysJobLog::getJobName,
+                    query.getJobName())
+                .eq(query.getStatus() != null, SysJobLog::getStatus,
+                    query.getStatus()).orderByDesc(SysJobLog::getStartTime);
         Page<SysJobLog> result = baseMapper.selectPage(page, wrapper);
-        List<SysJobLogVO> records = result.getRecords().stream().map(this::toVO).toList();
-        return PageResult.of(records, result.getTotal(), result.getCurrent(), result.getSize());
+        List<SysJobLogVO> records =
+            result.getRecords().stream().map(this::toVO).toList();
+        return PageResult.of(records, result.getTotal(), result.getCurrent(),
+            result.getSize());
     }
 
     @Override
@@ -52,7 +56,8 @@ public class JobLogServiceImpl extends BaseImpl<SysJobLogMapper, SysJobLog>
     private SysJobLogVO toVO(SysJobLog entry) {
         SysJobLogVO vo = new SysJobLogVO();
         vo.setId(entry.getId() == null ? null : entry.getId().toString());
-        vo.setJobId(entry.getJobId() == null ? null : entry.getJobId().toString());
+        vo.setJobId(
+            entry.getJobId() == null ? null : entry.getJobId().toString());
         vo.setJobName(entry.getJobName());
         vo.setHandlerName(entry.getHandlerName());
         vo.setParams(entry.getParams());

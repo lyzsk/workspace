@@ -27,6 +27,7 @@ public enum SystemCode implements IResultCode {
         "平台内置应用不允许修改编码或删除"), APP_HAS_MENUS(409, "应用下存在菜单，不能删除"),
     APP_ENTRY_URL_REQUIRED(422, "微前端模块入口不能为空"), APP_CODE_IMMUTABLE(409,
         "应用下存在菜单，不能修改编码"), ROLE_IN_USE(409, "角色已分配给用户，不能删除"),
+    APP_HAS_AUTHORIZATIONS(409, "应用下存在角色或用户授权，不能删除"),
     USER_PROTECTED(403, "内置管理员账号不允许在用户管理中修改或删除"), DEPT_PROTECTED(403,
         "总公司不允许修改或删除");
 

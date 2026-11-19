@@ -1,8 +1,8 @@
 package cn.sichu.system.security.util;
 
 import cn.sichu.common.exception.BusinessException;
-import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.common.result.ResultCode;
+import cn.sichu.system.security.model.LoginUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -25,8 +25,10 @@ public final class SecurityUtils {
     }
 
     public static LoginUser getLoginUserOrNull() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
+        Authentication authentication =
+            SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null
+            && authentication.getPrincipal() instanceof LoginUser loginUser) {
             return loginUser;
         }
         return null;

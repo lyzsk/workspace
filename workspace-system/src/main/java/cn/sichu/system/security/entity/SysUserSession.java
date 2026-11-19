@@ -25,6 +25,12 @@ public class SysUserSession {
 
     private String jti;
 
+    private String sessionCode;
+
+    private String refreshFamily;
+
+    private Long tokenVersion;
+
     private LocalDateTime loginTime;
 
     private LocalDateTime lastSeenAt;

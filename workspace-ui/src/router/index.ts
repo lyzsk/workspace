@@ -84,6 +84,7 @@ router.beforeEach(async (to) => {
     NProgress.start();
     const userStore = useUserStore();
     const permissionStore = usePermissionStore();
+    await userStore.restore();
 
     if (to.name !== "Login" && !userStore.isLogin) {
         return { name: "Login", query: { redirect: to.fullPath } };
@@ -97,10 +98,14 @@ router.beforeEach(async (to) => {
         try {
             await permissionStore.loadAndBuild(router);
             return { path: to.fullPath, replace: true };
-        } catch {
-            userStore.logout();
-            permissionStore.reset();
-            return { name: "Login", query: { redirect: to.fullPath } };
+        } catch (error) {
+            if (!userStore.isLogin) {
+                return {
+                    name: "Login",
+                    query: { redirect: to.fullPath, reason: "expired" },
+                };
+            }
+            throw error;
         }
     }
 

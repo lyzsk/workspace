@@ -11,6 +11,12 @@ spring:
     password: ${DB_MIGRATION_PASSWORD}
     baseline-on-migrate: true
     baseline-version: 1
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: ${REDIS_TIMEOUT:2s}
 
 server:
   port: ${SERVER_PORT:61114}
@@ -18,6 +24,10 @@ server:
 workspace:
   jwt:
     secret: ${JWT_SECRET}
+  auth:
+    gateway-token: ${GATEWAY_INTERNAL_TOKEN}
+    refresh-cookie:
+      secure: true
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
   api-doc:

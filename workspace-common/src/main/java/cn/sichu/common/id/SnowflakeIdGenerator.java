@@ -19,8 +19,10 @@ public class SnowflakeIdGenerator {
     private static final long SEQUENCE_MASK = ~(-1L << SEQUENCE_BITS);
 
     private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
-    private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
-    private static final long TIMESTAMP_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    private static final long DATACENTER_ID_SHIFT =
+        SEQUENCE_BITS + WORKER_ID_BITS;
+    private static final long TIMESTAMP_SHIFT =
+        SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
 
     private final long workerId;
     private final long datacenterId;
@@ -30,7 +32,8 @@ public class SnowflakeIdGenerator {
 
     public SnowflakeIdGenerator(long workerId, long datacenterId) {
         if (workerId < 0 || workerId > MAX_WORKER_ID) {
-            throw new IllegalArgumentException("workerId 必须在 0~" + MAX_WORKER_ID + " 之间");
+            throw new IllegalArgumentException(
+                "workerId 必须在 0~" + MAX_WORKER_ID + " 之间");
         }
         if (datacenterId < 0 || datacenterId > MAX_DATACENTER_ID) {
             throw new IllegalArgumentException(
@@ -45,7 +48,8 @@ public class SnowflakeIdGenerator {
 
         if (timestamp < lastTimestamp) {
             throw new IllegalStateException(
-                "时钟回拨，拒绝生成 ID，回拨 " + (lastTimestamp - timestamp) + " ms");
+                "时钟回拨，拒绝生成 ID，回拨 " + (lastTimestamp - timestamp)
+                    + " ms");
         }
 
         if (timestamp == lastTimestamp) {
@@ -59,8 +63,8 @@ public class SnowflakeIdGenerator {
 
         lastTimestamp = timestamp;
 
-        return ((timestamp - EPOCH) << TIMESTAMP_SHIFT) | (datacenterId << DATACENTER_ID_SHIFT) | (
-            workerId << WORKER_ID_SHIFT) | sequence;
+        return ((timestamp - EPOCH) << TIMESTAMP_SHIFT) | (datacenterId
+            << DATACENTER_ID_SHIFT) | (workerId << WORKER_ID_SHIFT) | sequence;
     }
 
     private long waitNextMillis(long lastTimestamp) {

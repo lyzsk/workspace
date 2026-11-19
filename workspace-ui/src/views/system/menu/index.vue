@@ -31,6 +31,13 @@
             </div>
         </SearchCard>
 
+        <div class="app-scope-selector">
+            <span>所属应用</span>
+            <el-select v-model="currentAppCode" style="width: 240px" @change="appChanged">
+                <el-option v-for="app in appOptions" :key="app.code" :label="app.name" :value="app.code" />
+            </el-select>
+        </div>
+
         <TableCard searchable v-model:show-search="showSearch" @refresh="load">
             <template #actions>
                 <el-button
@@ -195,6 +202,7 @@ import SearchCard from "@/components/core/tables/search-card/index.vue";
 import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
 import type { MenuNode } from "@/types/system";
+import { listApps, type AppInfo } from "@/api/system/app";
 import { useFormDraft } from "@/composables/useFormDraft";
 
 defineOptions({ name: "SystemMenu" });
@@ -209,10 +217,14 @@ const showSearch = ref(false);
 const loading = ref(false);
 const saving = ref(false);
 const menus = ref<MenuNode[]>([]);
+const currentAppCode = ref("workspace");
+const apps = ref<AppInfo[]>([]);
+const appOptions = computed(() => [{ code: "workspace", name: "工作台" }, ...apps.value]);
 const dialogVisible = ref(false);
 const editingId = ref<string | null>(null);
 const expandAll = ref(false);
 const tableKey = ref(0);
+let menuListVersion = 0;
 const filters = reactive({
     menuName: "",
     status: undefined as number | undefined,
@@ -223,7 +235,7 @@ const applied = reactive({
 });
 
 const form = reactive<MenuForm>({
-    appCode: "platform",
+    appCode: "workspace",
     menuCode: "",
     parentId: "0",
     menuName: "",
@@ -306,17 +318,29 @@ function typeTag(type: string) {
 }
 
 async function load() {
+    const version = ++menuListVersion;
+    const appCode = currentAppCode.value;
     loading.value = true;
     try {
-        menus.value = await getMenuTree(true);
+        const result = await getMenuTree(true, appCode);
+        if (version === menuListVersion) {
+            menus.value = result;
+        }
     } finally {
-        loading.value = false;
+        if (version === menuListVersion) {
+            loading.value = false;
+        }
     }
+}
+
+function appChanged() {
+    dialogVisible.value = false;
+    load();
 }
 
 function resetForm() {
     Object.assign(form, {
-        appCode: "platform",
+        appCode: currentAppCode.value,
         menuCode: "",
         parentId: "0",
         menuName: "",
@@ -348,7 +372,7 @@ function openCreateChild(row: MenuNode) {
 function openEdit(row: MenuNode) {
     editingId.value = row.id;
     Object.assign(form, {
-        appCode: "platform",
+        appCode: currentAppCode.value,
         menuCode: row.menuCode,
         parentId: row.parentId,
         menuName: row.menuName,
@@ -398,5 +422,16 @@ async function remove(row: MenuNode) {
     load();
 }
 
-onMounted(load);
+onMounted(async () => {
+    await Promise.all([load(), listApps().then(items => (apps.value = items))]);
+});
 </script>
+
+<style scoped>
+.app-scope-selector {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+</style>

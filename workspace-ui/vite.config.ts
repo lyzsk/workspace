@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => {
                     },
                 },
                 "/api": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                     xfwd: true,
                     configure: (proxy) => {
@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
                     },
                 },
                 "/ws": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                     ws: true,
                     configure: (proxy) => {
@@ -70,23 +70,23 @@ export default defineConfig(({ mode }) => {
                     },
                 },
                 "/doc.html": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                 },
                 "/v3/api-docs": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                 },
                 "/webjars": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                 },
                 "/swagger-ui": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                 },
                 "/swagger-resources": {
-                    target: env.VITE_API_PROXY || "http://localhost:61114",
+                    target: env.VITE_API_PROXY || "http://localhost:61115",
                     changeOrigin: true,
                 },
             },

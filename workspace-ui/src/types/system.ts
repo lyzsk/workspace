@@ -23,6 +23,7 @@ export interface MenuNode {
 
 export interface RoleRow {
     id: string;
+    appCode?: string;
     roleCode: string;
     roleName: string;
     dataScope: number;

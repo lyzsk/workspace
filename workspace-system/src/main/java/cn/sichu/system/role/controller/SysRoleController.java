@@ -39,8 +39,8 @@ public class SysRoleController {
     }
 
     @GetMapping("/list")
-    public Result<List<SysRoleVO>> list() {
-        return Result.success(roleService.listActive());
+    public Result<List<SysRoleVO>> list(@RequestParam(required = false) String appCode) {
+        return Result.success(roleService.listActive(appCode));
     }
 
     @GetMapping("/export")

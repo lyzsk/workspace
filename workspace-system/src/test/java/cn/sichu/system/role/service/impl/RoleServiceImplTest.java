@@ -1,7 +1,11 @@
 package cn.sichu.system.role.service.impl;
 
 import cn.sichu.common.exception.BusinessException;
+import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
+import cn.sichu.system.menu.entity.SysMenu;
+import cn.sichu.system.menu.mapper.SysMenuMapper;
 import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.entity.SysRoleDept;
 import cn.sichu.system.role.entity.SysRoleMenu;
@@ -44,6 +48,8 @@ class RoleServiceImplTest {
     private SysRoleMenuMapper roleMenuMapper;
     private SysRoleDeptMapper roleDeptMapper;
     private SysUserRoleMapper userRoleMapper;
+    private SysAppMapper appMapper;
+    private SysMenuMapper menuMapper;
     private RoleServiceImpl roleService;
 
     @BeforeAll
@@ -61,7 +67,24 @@ class RoleServiceImplTest {
         roleMenuMapper = mock(SysRoleMenuMapper.class);
         roleDeptMapper = mock(SysRoleDeptMapper.class);
         userRoleMapper = mock(SysUserRoleMapper.class);
-        roleService = new RoleServiceImpl(roleMapper, roleMenuMapper, roleDeptMapper, userRoleMapper);
+        appMapper = mock(SysAppMapper.class);
+        menuMapper = mock(SysMenuMapper.class);
+        SysApp workspace = new SysApp();
+        workspace.setId(1000L);
+        workspace.setCode("workspace");
+        when(appMapper.selectOne(any())).thenReturn(workspace);
+        when(appMapper.selectById(1000L)).thenReturn(workspace);
+        when(menuMapper.selectBatchIds(any())).thenAnswer(invocation -> {
+            List<Long> ids = invocation.getArgument(0);
+            return ids.stream().map(id -> {
+                SysMenu menu = new SysMenu();
+                menu.setId(id);
+                menu.setAppCode("workspace");
+                return menu;
+            }).toList();
+        });
+        roleService = new RoleServiceImpl(roleMapper, roleMenuMapper, roleDeptMapper, userRoleMapper,
+            appMapper, menuMapper);
     }
 
     @Test

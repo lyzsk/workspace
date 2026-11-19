@@ -41,6 +41,18 @@
             </div>
         </SearchCard>
 
+        <div class="app-scope-selector">
+            <span>所属应用</span>
+            <el-select v-model="query.appCode" style="width: 240px" @change="appChanged">
+                <el-option
+                    v-for="app in appOptions"
+                    :key="app.code"
+                    :label="app.name"
+                    :value="app.code"
+                />
+            </el-select>
+        </div>
+
         <TableCard searchable v-model:show-search="showSearch" @refresh="load">
             <template #actions>
                 <el-button
@@ -224,7 +236,7 @@
                     <el-button
                         type="primary"
                         :loading="saving"
-                        :disabled="isSuperAdminRole"
+                        :disabled="isSuperAdminRole || menuLoading"
                         @click="save"
                     >
                         保存
@@ -249,6 +261,7 @@ import {
 } from "@/api/system/role";
 import { getMenuTree } from "@/api/system/menu";
 import { getDeptList } from "@/api/system/dept";
+import { listApps, type AppInfo } from "@/api/system/app";
 import ButtonMore, {
     type ButtonMoreItem,
 } from "@/components/core/tables/button-more/index.vue";
@@ -277,15 +290,20 @@ interface TreeRef {
 const showSearch = ref(false);
 const loading = ref(false);
 const saving = ref(false);
+const menuLoading = ref(false);
 const rows = ref<RoleRow[]>([]);
 const total = ref(0);
 const dialogVisible = ref(false);
 const editingId = ref<string | null>(null);
 const menuOptions = ref<MenuNode[]>([]);
 const deptOptions = ref<DeptNode[]>([]);
+const apps = ref<AppInfo[]>([]);
+const appOptions = computed(() => [{ code: "workspace", name: "工作台" }, ...apps.value]);
 const menuTreeRef = ref<TreeRef>();
 const expandAll = ref(false);
 const isSelectAll = ref(false);
+let roleEditVersion = 0;
+let roleListVersion = 0;
 
 const isSuperAdminRole = computed(
     () => editingId.value !== null && form.roleCode === "SUPER_ADMIN",
@@ -307,6 +325,7 @@ const dataScopes = [
 const query = reactive({
     pageNum: 1,
     pageSize: 10,
+    appCode: "workspace",
     roleCode: "",
     roleName: "",
     status: undefined as number | undefined,
@@ -315,6 +334,7 @@ const query = reactive({
 });
 
 const form = reactive<RoleForm>({
+    appCode: "workspace",
     roleCode: "",
     roleName: "",
     dataScope: 5,
@@ -362,21 +382,28 @@ function handleRoleCommand(command: string | number, row: RoleRow) {
 }
 
 async function load() {
+    const version = ++roleListVersion;
+    const appCode = query.appCode;
     loading.value = true;
     try {
         const result = await pageRoles({
             pageNum: query.pageNum,
             pageSize: query.pageSize,
+            appCode,
             roleCode: query.roleCode || undefined,
             roleName: query.roleName || undefined,
             status: query.status,
             sortBy: query.sortBy,
             order: query.order,
         });
-        rows.value = result.records;
-        total.value = Number(result.total);
+        if (version === roleListVersion) {
+            rows.value = result.records;
+            total.value = Number(result.total);
+        }
     } finally {
-        loading.value = false;
+        if (version === roleListVersion) {
+            loading.value = false;
+        }
     }
 }
 
@@ -401,12 +428,21 @@ function onSortChange({
 
 async function exportData() {
     await exportRoles({
+        appCode: query.appCode,
         roleCode: query.roleCode || undefined,
         roleName: query.roleName || undefined,
         status: query.status,
         sortBy: query.sortBy,
         order: query.order,
     });
+}
+
+function appChanged() {
+    roleEditVersion += 1;
+    query.pageNum = 1;
+    dialogVisible.value = false;
+    menuOptions.value = [];
+    load();
 }
 
 function reset() {
@@ -421,6 +457,7 @@ function reset() {
 
 function resetForm() {
     Object.assign(form, {
+        appCode: query.appCode,
         roleCode: "",
         roleName: "",
         dataScope: 5,
@@ -435,15 +472,33 @@ function resetForm() {
 }
 
 async function openCreate() {
+    const version = ++roleEditVersion;
     editingId.value = null;
     resetForm();
-    menuOptions.value = await getMenuTree(true);
+    menuOptions.value = [];
+    menuLoading.value = true;
     dialogVisible.value = true;
+    try {
+        const menus = await getMenuTree(true, query.appCode);
+        if (version !== roleEditVersion) {
+            return;
+        }
+        menuOptions.value = menus;
+        await nextTick();
+        menuTreeRef.value?.setCheckedKeys([], false);
+    } finally {
+        if (version === roleEditVersion) {
+            menuLoading.value = false;
+        }
+    }
 }
 
 async function openEdit(row: RoleRow) {
+    const version = ++roleEditVersion;
+    const appCode = row.appCode ?? query.appCode;
     editingId.value = row.id;
     Object.assign(form, {
+        appCode,
         roleCode: row.roleCode,
         roleName: row.roleName,
         dataScope: row.dataScope,
@@ -454,15 +509,26 @@ async function openEdit(row: RoleRow) {
         menuIds: [],
         deptIds: row.deptIds ?? [],
     } satisfies RoleForm);
-    const [menus, menuIds] = await Promise.all([
-        getMenuTree(true),
-        getRoleMenuIds(row.id),
-    ]);
-    menuOptions.value = menus;
-    form.menuIds = menuIds;
+    menuOptions.value = [];
+    menuLoading.value = true;
     dialogVisible.value = true;
-    await nextTick();
-    menuTreeRef.value?.setCheckedKeys(form.menuIds, false);
+    try {
+        const [menus, menuIds] = await Promise.all([
+            getMenuTree(true, appCode),
+            getRoleMenuIds(row.id),
+        ]);
+        if (version !== roleEditVersion || editingId.value !== row.id) {
+            return;
+        }
+        menuOptions.value = menus;
+        form.menuIds = menuIds;
+        await nextTick();
+        menuTreeRef.value?.setCheckedKeys(menuIds, false);
+    } finally {
+        if (version === roleEditVersion) {
+            menuLoading.value = false;
+        }
+    }
 }
 
 function collectWithChildren(node: MenuNode, ids: string[] = []) {
@@ -574,6 +640,9 @@ watch(dialogVisible, async (visible) => {
     if (visible) {
         await nextTick();
         menuTreeRef.value?.setCheckedKeys(form.menuIds ?? [], false);
+    } else {
+        roleEditVersion += 1;
+        menuLoading.value = false;
     }
 });
 
@@ -581,11 +650,19 @@ onMounted(async () => {
     await Promise.all([
         load(),
         getDeptList().then((items) => (deptOptions.value = items)),
+        listApps().then((items) => (apps.value = items)),
     ]);
 });
 </script>
 
 <style scoped>
+.app-scope-selector {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
 .permission-panel {
     width: 100%;
     border: 1px solid var(--border);

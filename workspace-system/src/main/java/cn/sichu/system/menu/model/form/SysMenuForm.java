@@ -13,7 +13,7 @@ import lombok.Data;
 public class SysMenuForm {
 
     @Size(max = 50)
-    private String appCode = "platform";
+    private String appCode = "workspace";
 
     @NotBlank(message = "菜单编码不能为空")
     @Size(max = 100)

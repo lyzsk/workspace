@@ -2,6 +2,8 @@ package cn.sichu.system.app.service.impl;
 
 import cn.sichu.common.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
+import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.app.model.form.SysAppForm;
 import cn.sichu.system.app.model.vo.SysAppVO;
@@ -9,6 +11,7 @@ import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.menu.entity.SysMenu;
 import cn.sichu.system.menu.mapper.SysMenuMapper;
 import cn.sichu.system.role.entity.SysRoleMenu;
+import cn.sichu.system.role.mapper.SysRoleMapper;
 import cn.sichu.system.role.mapper.SysRoleMenuMapper;
 import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.system.user.entity.SysUser;
@@ -29,6 +32,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,6 +48,9 @@ class SysAppServiceImplTest {
     private SysAppMapper appMapper;
     private SysMenuMapper menuMapper;
     private SysRoleMenuMapper roleMenuMapper;
+    private IAppAuthorizationService authorizationService;
+    private SysUserAppMapper userAppMapper;
+    private SysRoleMapper roleMapper;
     private SysAppServiceImpl appService;
 
     @BeforeAll
@@ -60,7 +67,11 @@ class SysAppServiceImplTest {
         appMapper = mock(SysAppMapper.class);
         menuMapper = mock(SysMenuMapper.class);
         roleMenuMapper = mock(SysRoleMenuMapper.class);
-        appService = new SysAppServiceImpl(appMapper, menuMapper, roleMenuMapper);
+        authorizationService = mock(IAppAuthorizationService.class);
+        userAppMapper = mock(SysUserAppMapper.class);
+        roleMapper = mock(SysRoleMapper.class);
+        appService = new SysAppServiceImpl(appMapper, menuMapper, roleMenuMapper,
+            authorizationService, userAppMapper, roleMapper);
     }
 
     @AfterEach
@@ -83,6 +94,7 @@ class SysAppServiceImplTest {
     void runtimeRejectsUserWithoutAccessPermission() {
         when(appMapper.selectOne(any())).thenReturn(app());
         authenticate(List.of());
+        doThrow(new AccessDeniedException("denied")).when(authorizationService).assertAccess(1L, "ies");
 
         assertThrows(AccessDeniedException.class, () -> appService.getRuntime("/apps/ies"));
     }
@@ -100,19 +112,13 @@ class SysAppServiceImplTest {
     }
 
     @Test
-    void createBuildsCanonicalAccessPermissionAndHiddenMenu() {
-        when(menuMapper.selectOne(any())).thenReturn(appsRoot());
-
+    void createBuildsCanonicalAccessPermissionWithoutLegacyMenu() {
         appService.create(form());
 
-        ArgumentCaptor<SysMenu> captor = ArgumentCaptor.forClass(SysMenu.class);
-        verify(menuMapper).insert(captor.capture());
-        SysMenu menu = captor.getValue();
-        assertEquals("apps:ies:access", menu.getMenuCode());
-        assertEquals("ies:access", menu.getPermission());
-        assertEquals("BUTTON", menu.getMenuType());
-        assertEquals(0, menu.getHidden());
-        assertEquals(201L, menu.getParentId());
+        ArgumentCaptor<SysApp> captor = ArgumentCaptor.forClass(SysApp.class);
+        verify(appMapper).insert(captor.capture());
+        assertEquals("ies:access", captor.getValue().getAccessPermission());
+        verify(menuMapper, never()).insert(any(SysMenu.class));
     }
 
     @Test

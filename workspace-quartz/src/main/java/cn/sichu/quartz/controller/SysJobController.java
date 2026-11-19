@@ -40,7 +40,8 @@ public class SysJobController {
     @PutMapping("/{id}")
     @PreAuthorize("@ss.hasPerm('sys:job:update')")
     @Log(module = "定时任务", operation = "修改任务")
-    public Result<Void> update(@PathVariable Long id, @RequestBody @Valid SysJobForm form) {
+    public Result<Void> update(@PathVariable Long id,
+        @RequestBody @Valid SysJobForm form) {
         jobService.update(id, form);
         return Result.success();
     }

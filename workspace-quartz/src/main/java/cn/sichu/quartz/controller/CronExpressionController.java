@@ -26,7 +26,9 @@ public class CronExpressionController {
 
     @PostMapping("/validate")
     @PreAuthorize("@ss.hasPerm('sys:job:list')")
-    public Result<CronValidationVO> validate(@RequestBody @Valid CronValidationForm form) {
-        return Result.success(cronExpressionService.validate(form.expression()));
+    public Result<CronValidationVO> validate(
+        @RequestBody @Valid CronValidationForm form) {
+        return Result.success(
+            cronExpressionService.validate(form.expression()));
     }
 }

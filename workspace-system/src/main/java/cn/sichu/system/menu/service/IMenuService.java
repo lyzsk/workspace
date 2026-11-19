@@ -14,6 +14,8 @@ public interface IMenuService {
 
     List<SysMenuTreeVO> tree(boolean includeButtons);
 
+    List<SysMenuTreeVO> tree(boolean includeButtons, String appCode);
+
     List<SysMenuTreeVO> currentUserTree();
 
     Long create(SysMenuForm form);

@@ -2,6 +2,7 @@ package cn.sichu.system.menu.service.impl;
 
 import cn.sichu.common.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.menu.entity.SysMenu;
@@ -33,12 +34,20 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     private static final String TYPE_BUTTON = "BUTTON";
 
     private final SysMenuMapper menuMapper;
+    private final IAppAuthorizationService authorizationService;
     private final SysAppMapper appMapper;
 
     @Override
     public List<SysMenuTreeVO> tree(boolean includeButtons) {
+        return tree(includeButtons, "workspace");
+    }
+
+    @Override
+    public List<SysMenuTreeVO> tree(boolean includeButtons, String appCode) {
+        String app = appCode == null || appCode.isBlank() ? "workspace" : appCode;
         LambdaQueryWrapper<SysMenu> wrapper =
-            new LambdaQueryWrapper<SysMenu>().orderByAsc(SysMenu::getSortNo).orderByAsc(SysMenu::getId);
+            new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, app)
+                .orderByAsc(SysMenu::getSortNo).orderByAsc(SysMenu::getId);
         if (!includeButtons) {
             wrapper.in(SysMenu::getMenuType, TYPE_DIR, TYPE_MENU);
         }
@@ -48,10 +57,12 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     @Override
     public List<SysMenuTreeVO> currentUserTree() {
         LoginUser loginUser = SecurityUtils.getLoginUser();
+        authorizationService.assertAccess(loginUser.getUserId(), "workspace");
         List<SysMenu> menus;
         if (loginUser.getRoles().contains("SUPER_ADMIN")) {
             menus = menuMapper.selectList(
-                new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getStatus, 1).eq(SysMenu::getHidden, 1)
+                new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, "workspace")
+                    .eq(SysMenu::getStatus, 1).eq(SysMenu::getHidden, 1)
                     .in(SysMenu::getMenuType, TYPE_DIR, TYPE_MENU).orderByAsc(SysMenu::getSortNo)
                     .orderByAsc(SysMenu::getId));
         } else {
@@ -64,20 +75,27 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     }
 
     private void appendRegisteredApps(List<SysMenuTreeVO> tree, LoginUser loginUser) {
+        List<SysApp> apps = authorizationService.listAccessibleApps(loginUser.getUserId());
+        if (apps.isEmpty()) {
+            return;
+        }
         SysMenuTreeVO root = tree.stream().filter(node -> "apps".equals(node.getMenuCode()))
             .findFirst().orElse(null);
         if (root == null) {
-            return;
+            root = new SysMenuTreeVO();
+            root.setId("apps-root");
+            root.setParentId("0");
+            root.setMenuCode("apps");
+            root.setMenuName("应用管理");
+            root.setMenuType(TYPE_DIR);
+            root.setPath("/apps");
+            root.setSortNo(100);
+            root.setHidden(1);
+            root.setStatus(1);
+            tree.add(root);
         }
-        List<SysApp> apps = appMapper.selectList(new LambdaQueryWrapper<SysApp>()
-            .eq(SysApp::getStatus, 1)
-            .ne(SysApp::getCode, "workspace")
-            .orderByAsc(SysApp::getSortNo)
-            .orderByAsc(SysApp::getId));
         for (SysApp app : apps) {
-            if (app.getBasePath() == null || app.getBasePath().isBlank()
-                || !loginUser.getRoles().contains("SUPER_ADMIN")
-                && !loginUser.getPermissions().contains(app.getAccessPermission())) {
+            if (app.getBasePath() == null || app.getBasePath().isBlank()) {
                 continue;
             }
             SysMenuTreeVO child = new SysMenuTreeVO();
@@ -99,9 +117,10 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     @Override
     @Transactional
     public Long create(SysMenuForm form) {
+        requireApp(form.getAppCode());
         validateType(form.getMenuType());
         checkCodeUnique(form.getAppCode(), form.getMenuCode(), null);
-        checkParent(form.getParentId(), null);
+        checkParent(form.getParentId(), null, form.getAppCode());
         SysMenu menu = new SysMenu();
         applyForm(menu, form);
         menuMapper.insert(menu);
@@ -115,9 +134,10 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
         if (menu == null) {
             throw new BusinessException(SystemCode.MENU_NOT_FOUND);
         }
+        requireApp(form.getAppCode());
         validateType(form.getMenuType());
         checkCodeUnique(form.getAppCode(), form.getMenuCode(), id);
-        checkParent(form.getParentId(), id);
+        checkParent(form.getParentId(), id, form.getAppCode());
         applyForm(menu, form);
         menuMapper.updateById(menu);
     }
@@ -137,7 +157,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     }
 
     private void applyForm(SysMenu menu, SysMenuForm form) {
-        menu.setAppCode(form.getAppCode() == null ? "platform" : form.getAppCode());
+        menu.setAppCode(form.getAppCode() == null ? "workspace" : form.getAppCode());
         menu.setMenuCode(form.getMenuCode());
         menu.setParentId(form.getParentId() == null ? 0L : form.getParentId());
         menu.setMenuName(form.getMenuName());
@@ -151,6 +171,13 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
         menu.setStatus(form.getStatus() == null ? 1 : form.getStatus());
     }
 
+    private void requireApp(String appCode) {
+        String code = appCode == null || appCode.isBlank() ? "workspace" : appCode;
+        if (appMapper.selectCount(new LambdaQueryWrapper<SysApp>().eq(SysApp::getCode, code)) == 0) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+    }
+
     private void validateType(String menuType) {
         if (!TYPE_DIR.equals(menuType) && !TYPE_MENU.equals(menuType) && !TYPE_BUTTON.equals(
             menuType)) {
@@ -160,7 +187,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     }
 
     private void checkCodeUnique(String appCode, String menuCode, Long excludeId) {
-        String app = appCode == null ? "platform" : appCode;
+        String app = appCode == null ? "workspace" : appCode;
         LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getAppCode, app)
             .eq(SysMenu::getMenuCode, menuCode);
         if (excludeId != null) {
@@ -171,15 +198,20 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
         }
     }
 
-    private void checkParent(Long parentId, Long selfId) {
+    private void checkParent(Long parentId, Long selfId, String appCode) {
         if (parentId == null || parentId == 0L) {
             return;
         }
         if (Objects.equals(parentId, selfId)) {
             throw new BusinessException(SystemCode.MENU_NOT_FOUND, "上级菜单不能是自己");
         }
-        if (menuMapper.selectById(parentId) == null) {
+        SysMenu parent = menuMapper.selectById(parentId);
+        if (parent == null) {
             throw new BusinessException(SystemCode.MENU_NOT_FOUND, "上级菜单不存在");
+        }
+        String expectedApp = appCode == null ? "workspace" : appCode;
+        if (!Objects.equals(parent.getAppCode(), expectedApp)) {
+            throw new BusinessException(SystemCode.MENU_NOT_FOUND, "上级菜单与当前资源不属于同一应用");
         }
     }
 

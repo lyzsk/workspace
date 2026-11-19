@@ -1,11 +1,9 @@
 import { onMounted, onUnmounted } from "vue";
 import { ElNotification, type NotificationHandle } from "element-plus";
-import { logout as logoutApi } from "@/api/auth";
 import { SessionConfig } from "@/config/session";
-import { isExpired, handleSessionExpired } from "@/utils/session";
+import { useUserStore } from "@/store/modules/user";
 
 const ACTIVITY_KEY = "workspace:lastActivity";
-const CHANNEL_NAME = "workspace-session";
 
 function readLastActivity() {
     const value = Number(localStorage.getItem(ACTIVITY_KEY) ?? 0);
@@ -13,10 +11,10 @@ function readLastActivity() {
 }
 
 export function useIdleLogout() {
+    const userStore = useUserStore();
     let checkTimer: number | undefined;
     let warning: NotificationHandle | undefined;
     let lastWrite = 0;
-    let channel: BroadcastChannel | undefined;
     let loggingOut = false;
 
     function markActivity() {
@@ -33,24 +31,26 @@ export function useIdleLogout() {
     }
 
     async function forceLogout() {
-        if (loggingOut || isExpired()) {
+        if (loggingOut || userStore.status === "expired") {
             return;
         }
         loggingOut = true;
         warning?.close();
         warning = undefined;
-        channel?.postMessage({ type: "logout", reason: "idle" });
-        await logoutApi({ silent: true }).catch(() => undefined);
-        handleSessionExpired("idle");
+        await userStore.logout("idle");
     }
 
     function check() {
         const idle = Date.now() - readLastActivity();
         if (idle >= SessionConfig.idleTimeoutMs) {
-            forceLogout();
+            void forceLogout();
             return;
         }
-        if (idle >= SessionConfig.idleTimeoutMs - SessionConfig.idleWarningMs && !warning) {
+        if (
+            idle >=
+                SessionConfig.idleTimeoutMs - SessionConfig.idleWarningMs &&
+            !warning
+        ) {
             warning = ElNotification({
                 title: "即将自动退出",
                 message: "长时间未操作，1 分钟后将退出登录",
@@ -60,16 +60,12 @@ export function useIdleLogout() {
         }
     }
 
-    function onStorageActivity() {
-        if (warning && Date.now() - readLastActivity() < SessionConfig.idleTimeoutMs - SessionConfig.idleWarningMs) {
-            warning.close();
-            warning = undefined;
-        }
-    }
-
     onMounted(() => {
         const now = Date.now();
-        if (!readLastActivity() || now - readLastActivity() > SessionConfig.idleTimeoutMs) {
+        if (
+            !readLastActivity() ||
+            now - readLastActivity() > SessionConfig.idleTimeoutMs
+        ) {
             localStorage.setItem(ACTIVITY_KEY, String(now));
         }
         window.addEventListener("mousemove", markActivity, { passive: true });
@@ -77,20 +73,14 @@ export function useIdleLogout() {
         window.addEventListener("keydown", markActivity);
         window.addEventListener("wheel", markActivity, { passive: true });
         window.addEventListener("touchstart", markActivity, { passive: true });
-        document.addEventListener("scroll", markActivity, { capture: true, passive: true });
-        window.addEventListener("storage", onStorageActivity);
-
-        if (typeof BroadcastChannel !== "undefined") {
-            channel = new BroadcastChannel(CHANNEL_NAME);
-            channel.onmessage = (event) => {
-                if (event.data?.type === "logout" && !loggingOut) {
-                    loggingOut = true;
-                    handleSessionExpired(event.data.reason === "idle" ? "idle" : "expired");
-                }
-            };
-        }
-
-        checkTimer = window.setInterval(check, SessionConfig.idleCheckIntervalMs);
+        document.addEventListener("scroll", markActivity, {
+            capture: true,
+            passive: true,
+        });
+        checkTimer = window.setInterval(
+            check,
+            SessionConfig.idleCheckIntervalMs,
+        );
     });
 
     onUnmounted(() => {
@@ -100,9 +90,7 @@ export function useIdleLogout() {
         window.removeEventListener("wheel", markActivity);
         window.removeEventListener("touchstart", markActivity);
         document.removeEventListener("scroll", markActivity, { capture: true });
-        window.removeEventListener("storage", onStorageActivity);
         window.clearInterval(checkTimer);
         warning?.close();
-        channel?.close();
     });
 }

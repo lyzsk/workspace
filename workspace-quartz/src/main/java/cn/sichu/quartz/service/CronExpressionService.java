@@ -24,7 +24,8 @@ public class CronExpressionService {
     public CronValidationVO validate(String expression) {
         String value = expression == null ? "" : expression.trim();
         if (!CronExpression.isValidExpression(value)) {
-            return new CronValidationVO(false, "cron 表达式无效", RULE, List.of());
+            return new CronValidationVO(false, "cron 表达式无效", RULE,
+                List.of());
         }
         try {
             CronExpression cron = new CronExpression(value);
@@ -35,7 +36,8 @@ public class CronExpressionService {
                 if (cursor == null) {
                     break;
                 }
-                nextTimes.add(LocalDateTime.ofInstant(cursor.toInstant(), ZoneId.systemDefault()));
+                nextTimes.add(LocalDateTime.ofInstant(cursor.toInstant(),
+                    ZoneId.systemDefault()));
             }
             return new CronValidationVO(true, "表达式合法", RULE, nextTimes);
         } catch (java.text.ParseException | IllegalArgumentException e) {

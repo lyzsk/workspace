@@ -15,6 +15,8 @@ public class SysRoleVO {
 
     private String id;
 
+    private String appCode;
+
     private String roleCode;
 
     private String roleName;

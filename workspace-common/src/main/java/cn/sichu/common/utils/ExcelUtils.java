@@ -18,8 +18,9 @@ public final class ExcelUtils {
     private ExcelUtils() {
     }
 
-    public static void write(HttpServletResponse response, String filename, String sheetName,
-        List<String> headers, List<List<String>> rows) throws IOException {
+    public static void write(HttpServletResponse response, String filename,
+        String sheetName, List<String> headers, List<List<String>> rows)
+        throws IOException {
         response.setContentType(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("UTF-8");
@@ -28,11 +29,10 @@ public final class ExcelUtils {
         write(response.getOutputStream(), sheetName, headers, rows);
     }
 
-    public static void write(OutputStream outputStream, String sheetName, List<String> headers,
-        List<List<String>> rows) {
+    public static void write(OutputStream outputStream, String sheetName,
+        List<String> headers, List<List<String>> rows) {
         FastExcel.write(outputStream)
-            .head(headers.stream().map(List::of).toList())
-            .sheet(sheetName)
+            .head(headers.stream().map(List::of).toList()).sheet(sheetName)
             .doWrite(rows);
     }
 }

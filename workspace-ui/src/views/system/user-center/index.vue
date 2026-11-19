@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import SvgIcon from "@/components/core/base/svg-icon/index.vue";
 import {
@@ -137,16 +137,12 @@ import {
     profileBackgrounds,
     resolveAvatar,
 } from "@/config/assets/images";
-import { usePermissionStore } from "@/store/modules/permission";
 import { useUserStore } from "@/store/modules/user";
 import type { PasswordPayload, ProfilePayload, UserInfo } from "@/types/api";
 import { useFormDraft } from "@/composables/useFormDraft";
-import { clearDraftsForUser } from "@/utils/draft";
 
 const route = useRoute();
-const router = useRouter();
 const userStore = useUserStore();
-const permissionStore = usePermissionStore();
 const profileFormRef = ref<FormInstance>();
 const passwordFormRef = ref<FormInstance>();
 const saving = ref(false);
@@ -267,11 +263,8 @@ async function savePassword() {
     passwordSaving.value = true;
     try {
         await changePassword(passwordForm);
-        permissionStore.reset();
-        clearDraftsForUser(userStore.user?.id);
-        userStore.logout();
+        await userStore.logout("password");
         ElMessage.success("密码已修改，请重新登录");
-        router.replace("/login");
     } finally {
         passwordSaving.value = false;
     }

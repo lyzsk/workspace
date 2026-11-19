@@ -15,6 +15,8 @@ import lombok.EqualsAndHashCode;
 @TableName("sys_role")
 public class SysRole extends TenantEntity {
 
+    private Long appId;
+
     private String roleCode;
 
     private String roleName;

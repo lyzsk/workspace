@@ -4,7 +4,11 @@ import cn.sichu.common.exception.BusinessException;
 import cn.sichu.common.result.PageResult;
 import cn.sichu.common.utils.QuerySortUtils;
 import cn.sichu.common.base.BaseImpl;
+import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
+import cn.sichu.system.menu.entity.SysMenu;
+import cn.sichu.system.menu.mapper.SysMenuMapper;
 import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.entity.SysRoleDept;
 import cn.sichu.system.role.entity.SysRoleMenu;
@@ -27,6 +31,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -43,6 +48,8 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final SysAppMapper appMapper;
+    private final SysMenuMapper menuMapper;
 
     @Override
     public PageResult<SysRoleVO> page(SysRoleQuery query) {
@@ -59,8 +66,15 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
 
     @Override
     public List<SysRoleVO> listActive() {
+        return listActive("workspace");
+    }
+
+    @Override
+    public List<SysRoleVO> listActive(String appCode) {
+        SysApp app = requireApp(appCode);
         return roleMapper.selectList(
             new LambdaQueryWrapper<SysRole>().eq(SysRole::getStatus, 1)
+                .eq(SysRole::getAppId, app.getId())
                 .orderByAsc(SysRole::getRoleSort).orderByAsc(SysRole::getId)).stream()
             .map(this::toVO).toList();
     }
@@ -68,12 +82,17 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     @Override
     @Transactional
     public Long create(SysRoleForm form) {
-        checkCodeUnique(form.getRoleCode(), null);
+        if (SUPER_ADMIN.equals(form.getRoleCode())) {
+            throw new BusinessException(SystemCode.ROLE_PROTECTED);
+        }
+        SysApp app = requireApp(form.getAppCode());
+        checkCodeUnique(form.getRoleCode(), app.getId(), null);
         SysRole role = new SysRole();
+        role.setAppId(app.getId());
         applyForm(role, form);
         roleMapper.insert(role);
         saveDepts(role.getId(), form);
-        saveMenus(role.getId(), form.getMenuIds());
+        saveMenus(role, form.getMenuIds());
         return role.getId();
     }
 
@@ -85,11 +104,15 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
             throw new BusinessException(SystemCode.ROLE_NOT_FOUND);
         }
         checkRoleAllowed(role);
-        checkCodeUnique(form.getRoleCode(), id);
+        SysApp app = requireApp(form.getAppCode());
+        if (!role.getAppId().equals(app.getId())) {
+            throw new BusinessException(SystemCode.ROLE_PROTECTED, "角色所属应用不允许修改");
+        }
+        checkCodeUnique(form.getRoleCode(), role.getAppId(), id);
         applyForm(role, form);
         roleMapper.updateById(role);
         saveDepts(role.getId(), form);
-        saveMenus(role.getId(), form.getMenuIds());
+        saveMenus(role, form.getMenuIds());
     }
 
     @Override
@@ -128,12 +151,14 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
             throw new BusinessException(SystemCode.ROLE_NOT_FOUND);
         }
         checkRoleAllowed(role);
-        saveMenus(roleId, menuIds);
+        saveMenus(role, menuIds);
     }
 
     private LambdaQueryWrapper<SysRole> buildWrapper(SysRoleQuery query) {
+        SysApp app = requireApp(query.getAppCode());
         LambdaQueryWrapper<SysRole> wrapper =
-            new LambdaQueryWrapper<SysRole>().like(StringUtils.hasText(query.getRoleCode()),
+            new LambdaQueryWrapper<SysRole>().eq(SysRole::getAppId, app.getId())
+                .like(StringUtils.hasText(query.getRoleCode()),
                     SysRole::getRoleCode, query.getRoleCode())
                 .like(StringUtils.hasText(query.getRoleName()), SysRole::getRoleName,
                     query.getRoleName())
@@ -148,9 +173,10 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         return wrapper;
     }
 
-    private void checkCodeUnique(String roleCode, Long excludeId) {
+    private void checkCodeUnique(String roleCode, Long appId, Long excludeId) {
         LambdaQueryWrapper<SysRole> wrapper =
-            new LambdaQueryWrapper<SysRole>().eq(SysRole::getRoleCode, roleCode);
+            new LambdaQueryWrapper<SysRole>().eq(SysRole::getRoleCode, roleCode)
+                .eq(SysRole::getAppId, appId);
         if (excludeId != null) {
             wrapper.ne(SysRole::getId, excludeId);
         }
@@ -179,6 +205,8 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     private SysRoleVO toVO(SysRole role) {
         SysRoleVO vo = new SysRoleVO();
         vo.setId(role.getId() == null ? null : role.getId().toString());
+        SysApp app = role.getAppId() == null ? null : appMapper.selectById(role.getAppId());
+        vo.setAppCode(app == null ? null : app.getCode());
         vo.setRoleCode(role.getRoleCode());
         vo.setRoleName(role.getRoleName());
         vo.setDataScope(role.getDataScope());
@@ -212,19 +240,39 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         }
     }
 
-    private void saveMenus(Long roleId, List<Long> menuIds) {
-        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));
+    private void saveMenus(SysRole role, List<Long> menuIds) {
+        roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, role.getId()));
         if (menuIds == null || menuIds.isEmpty()) {
             return;
         }
+        SysApp app = appMapper.selectById(role.getAppId());
+        List<Long> requested = menuIds.stream().distinct().toList();
+        List<SysMenu> menus = menuMapper.selectBatchIds(requested);
+        if (menus.size() != requested.size()) {
+            throw new BusinessException(SystemCode.MENU_NOT_FOUND);
+        }
+        for (SysMenu menu : menus) {
+            if (app == null || !Objects.equals(menu.getAppCode(), app.getCode())) {
+                throw new BusinessException(SystemCode.ROLE_PROTECTED, "角色与权限资源不属于同一应用");
+            }
+        }
         Long tenantId = currentTenantId();
-        for (Long menuId : menuIds.stream().distinct().toList()) {
+        for (Long menuId : requested) {
             SysRoleMenu roleMenu = new SysRoleMenu();
             roleMenu.setTenantId(tenantId);
-            roleMenu.setRoleId(roleId);
+            roleMenu.setRoleId(role.getId());
             roleMenu.setMenuId(menuId);
             roleMenuMapper.insert(roleMenu);
         }
+    }
+
+    private SysApp requireApp(String appCode) {
+        String code = StringUtils.hasText(appCode) ? appCode.trim() : "workspace";
+        SysApp app = appMapper.selectOne(new LambdaQueryWrapper<SysApp>().eq(SysApp::getCode, code));
+        if (app == null) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        return app;
     }
 
     private Long currentTenantId() {

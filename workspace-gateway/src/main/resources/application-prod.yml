@@ -1,0 +1,16 @@
+workspace:
+  auth:
+    gateway-token: ${GATEWAY_INTERNAL_TOKEN}
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        register-enabled: true
+      config:
+        enabled: ${NACOS_CONFIG_ENABLED:true}
+
+logging:
+  level:
+    cn.sichu: info

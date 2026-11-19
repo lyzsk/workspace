@@ -42,16 +42,12 @@ import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { ElMessageBox, ElPopover } from "element-plus";
 import SvgIcon from "@/components/core/base/svg-icon/index.vue";
-import { logout as logoutApi } from "@/api/auth";
-import { clearDraftsForUser } from "@/utils/draft";
 import { resolveAvatar } from "@/config/assets/images";
-import { usePermissionStore } from "@/store/modules/permission";
 import { useUserStore } from "@/store/modules/user";
 
 const router = useRouter();
 const { t } = useI18n();
 const userStore = useUserStore();
-const permissionStore = usePermissionStore();
 const popoverRef = ref<InstanceType<typeof ElPopover>>();
 
 const avatar = computed(() =>
@@ -72,14 +68,7 @@ async function confirmLogout() {
         cancelButtonText: "取消",
         type: "warning",
     });
-    try {
-        await logoutApi({ silent: true });
-    } catch {
-    }
-    permissionStore.reset();
-    clearDraftsForUser(userStore.user?.id);
-    userStore.logout();
-    router.replace("/login");
+    await userStore.logout("manual");
 }
 </script>
 

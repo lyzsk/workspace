@@ -15,8 +15,8 @@ public final class QuerySortUtils {
     private QuerySortUtils() {
     }
 
-    public static <T> boolean apply(LambdaQueryWrapper<T> wrapper, String sortBy, String order,
-        Map<String, SFunction<T, ?>> allowed) {
+    public static <T> boolean apply(LambdaQueryWrapper<T> wrapper,
+        String sortBy, String order, Map<String, SFunction<T, ?>> allowed) {
         if (sortBy == null || sortBy.isBlank()) {
             return false;
         }

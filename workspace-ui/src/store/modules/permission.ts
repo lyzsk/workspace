@@ -1,8 +1,9 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import type { Component } from "vue";
-import type { Router } from "vue-router";
+import type { RouteRecordRaw, Router } from "vue-router";
 import { getMyMenus } from "@/api/system/menu";
+import { useUserStore } from "@/store/modules/user";
 import type { MenuNode } from "@/types/system";
 
 type ViewModule = () => Promise<{ default: Component }>;
@@ -57,13 +58,11 @@ export const usePermissionStore = defineStore("permission", () => {
     const loaded = ref(false);
     const removers: Array<() => void> = [];
     const homePath = computed(() => firstMenuPath(menus.value) ?? "/dashboard");
+    let loadPromise: Promise<void> | null = null;
+    let snapshotGeneration = 0;
 
-    async function loadAndBuild(router: Router) {
-        if (loaded.value) {
-            return;
-        }
-        const tree = await getMyMenus();
-        menus.value = tree;
+    function buildRoutes(tree: MenuNode[]) {
+        const routes: RouteRecordRaw[] = [];
         for (const menu of flattenMenus(tree)) {
             if (
                 menu.menuType !== "MENU" ||
@@ -87,29 +86,66 @@ export const usePermissionStore = defineStore("permission", () => {
                       }
                     : {}),
             };
-            removers.push(
-                router.addRoute("Layout", {
-                    path: menu.path,
-                    name: menu.menuCode,
+            routes.push({
+                path: menu.path,
+                name: menu.menuCode,
+                component,
+                meta,
+            });
+            if (menu.component === "apps/detail/MicroFrontendHost") {
+                routes.push({
+                    path: `${menu.path}/:pathMatch(.*)*`,
+                    name: `${menu.menuCode}:deep`,
                     component,
                     meta,
-                }),
-            );
-            if (menu.component === "apps/detail/MicroFrontendHost") {
-                removers.push(
-                    router.addRoute("Layout", {
-                        path: `${menu.path}/:pathMatch(.*)*`,
-                        name: `${menu.menuCode}:deep`,
-                        component,
-                        meta,
-                    }),
-                );
+                });
             }
         }
-        loaded.value = true;
+        return routes;
+    }
+
+    async function loadAndBuild(router: Router, force = false) {
+        if (loaded.value && !force) {
+            return;
+        }
+        if (loadPromise) {
+            return loadPromise;
+        }
+        const userStore = useUserStore();
+        const epoch = userStore.sessionEpoch;
+        const generation = snapshotGeneration;
+        let pending: Promise<void>;
+        pending = (async () => {
+            const tree = await getMyMenus();
+            if (
+                epoch !== userStore.sessionEpoch ||
+                generation !== snapshotGeneration ||
+                !userStore.isLogin
+            ) {
+                throw new Error("STALE_SESSION");
+            }
+            const routes = buildRoutes(tree);
+            removers.forEach((remove) => remove());
+            removers.length = 0;
+            for (const route of routes) {
+                removers.push(router.addRoute("Layout", route));
+            }
+            menus.value = tree;
+            loaded.value = true;
+        })();
+        loadPromise = pending;
+        try {
+            await pending;
+        } finally {
+            if (loadPromise === pending) {
+                loadPromise = null;
+            }
+        }
     }
 
     function reset() {
+        snapshotGeneration += 1;
+        loadPromise = null;
         removers.forEach((remove) => remove());
         removers.length = 0;
         menus.value = [];

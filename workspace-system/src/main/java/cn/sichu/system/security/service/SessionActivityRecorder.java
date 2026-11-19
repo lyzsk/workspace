@@ -39,12 +39,15 @@ public class SessionActivityRecorder {
         }
         recordedAt.put(jti, now);
         try {
-            LambdaUpdateWrapper<SysUserSession> update = new LambdaUpdateWrapper<>();
-            update.eq(SysUserSession::getJti, jti).eq(SysUserSession::getRevoked, 0)
+            LambdaUpdateWrapper<SysUserSession> update =
+                new LambdaUpdateWrapper<>();
+            update.eq(SysUserSession::getJti, jti)
+                .eq(SysUserSession::getRevoked, 0)
                 .set(SysUserSession::getLastSeenAt, LocalDateTime.now());
             sessionMapper.update(null, update);
         } catch (DataAccessException e) {
-            log.warn("记录会话最后活跃时间失败 jti={} msg={}", jti, e.getMessage());
+            log.warn("记录会话最后活跃时间失败 jti={} msg={}", jti,
+                e.getMessage());
         }
     }
 

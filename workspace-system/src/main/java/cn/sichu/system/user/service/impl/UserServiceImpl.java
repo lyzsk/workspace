@@ -4,7 +4,14 @@ import cn.sichu.common.exception.BusinessException;
 import cn.sichu.common.result.PageResult;
 import cn.sichu.common.result.ResultCode;
 import cn.sichu.common.utils.QuerySortUtils;
+import cn.sichu.system.app.entity.SysApp;
+import cn.sichu.system.app.grant.entity.SysUserApp;
+import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
+import cn.sichu.system.app.grant.service.IAppGrantService;
+import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
+import cn.sichu.system.role.entity.SysRole;
+import cn.sichu.system.role.mapper.SysRoleMapper;
 import cn.sichu.system.security.service.AuthTokenStore;
 import cn.sichu.system.security.model.DataScopeFilter;
 import cn.sichu.system.security.service.IDataScopeService;
@@ -46,6 +53,10 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     private final AuthTokenStore authTokenStore;
     private final SysUserRoleMapper userRoleMapper;
     private final IDataScopeService dataScopeService;
+    private final IAppGrantService appGrantService;
+    private final SysAppMapper appMapper;
+    private final SysRoleMapper roleMapper;
+    private final SysUserAppMapper userAppMapper;
 
     @Override
     public PageResult<SysUserPageVO> page(SysUserQuery query) {
@@ -84,7 +95,10 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         user.setPassword(passwordEncoder.encode(form.getPassword()));
         user.setTokenVersion(0L);
         baseMapper.insert(user);
-        saveRoles(user.getId(), form.getRoleIds(), user.getTenantId());
+        if (form.getRoleIds() != null && !form.getRoleIds().isEmpty()) {
+            saveRoles(user.getId(), form.getRoleIds(), user.getTenantId());
+        }
+        appGrantService.ensureWorkspaceGrant(user.getId(), user.getTenantId());
         return user.getId();
     }
 
@@ -144,6 +158,7 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
             .setSql("token_version = token_version + 1");
         baseMapper.update(null, wrapper);
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
+        userAppMapper.delete(new LambdaQueryWrapper<SysUserApp>().eq(SysUserApp::getUserId, id));
         authTokenStore.revokeAllSessions(id);
     }
 
@@ -227,24 +242,80 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     }
 
     private List<String> roleIdsOf(Long userId) {
+        List<Long> platformRoleIds = platformRoleIds();
+        if (platformRoleIds.isEmpty()) {
+            return List.of();
+        }
         return userRoleMapper.selectList(
-                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId))
-            .stream().map(userRole -> userRole.getRoleId().toString()).toList();
+                new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId)
+                    .in(SysUserRole::getRoleId, platformRoleIds)).stream()
+            .map(userRole -> userRole.getRoleId().toString()).toList();
     }
 
     private void saveRoles(Long userId, List<Long> roleIds, Long tenantId) {
-        userRoleMapper.delete(
-            new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId));
         if (roleIds == null) {
             return;
         }
-        for (Long roleId : roleIds.stream().distinct().toList()) {
+        checkRoleAssignmentAllowed();
+        List<Long> platformRoleIds = platformRoleIds();
+        if (!platformRoleIds.isEmpty()) {
+            userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
+                .eq(SysUserRole::getUserId, userId).in(SysUserRole::getRoleId, platformRoleIds));
+        }
+        List<Long> requested = roleIds.stream().distinct().toList();
+        if (requested.isEmpty()) {
+            return;
+        }
+        List<SysRole> roles = roleMapper.selectBatchIds(requested);
+        SysApp workspace = workspaceApp();
+        if (roles.size() != requested.size()) {
+            throw new BusinessException(SystemCode.ROLE_NOT_FOUND);
+        }
+        for (SysRole role : roles) {
+            if (!Objects.equals(role.getAppId(), workspace.getId())) {
+                throw new BusinessException(ResultCode.FORBIDDEN, "平台用户只能分配 workspace 角色");
+            }
+            if (!Objects.equals(role.getStatus(), 1)) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "不能分配已停用角色");
+            }
+            if ("SUPER_ADMIN".equals(role.getRoleCode()) && !isCurrentSuperAdmin()) {
+                throw new BusinessException(ResultCode.FORBIDDEN, "无权分配超级管理员角色");
+            }
+        }
+        for (Long roleId : requested) {
             SysUserRole userRole = new SysUserRole();
             userRole.setTenantId(tenantId == null ? 0L : tenantId);
             userRole.setUserId(userId);
             userRole.setRoleId(roleId);
             userRoleMapper.insert(userRole);
         }
+    }
+
+    private List<Long> platformRoleIds() {
+        return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getAppId, workspaceApp().getId())).stream().map(SysRole::getId).toList();
+    }
+
+    private SysApp workspaceApp() {
+        SysApp app = appMapper.selectOne(new LambdaQueryWrapper<SysApp>()
+            .eq(SysApp::getCode, "workspace"));
+        if (app == null) {
+            throw new BusinessException(SystemCode.APP_NOT_FOUND);
+        }
+        return app;
+    }
+
+    private void checkRoleAssignmentAllowed() {
+        var current = SecurityUtils.getLoginUserOrNull();
+        if (current == null || !current.getRoles().contains("SUPER_ADMIN")
+            && !current.getPermissions().contains("sys:user:assign")) {
+            throw new BusinessException(ResultCode.FORBIDDEN, "无权分配平台角色");
+        }
+    }
+
+    private boolean isCurrentSuperAdmin() {
+        var current = SecurityUtils.getLoginUserOrNull();
+        return current != null && current.getRoles().contains("SUPER_ADMIN");
     }
 
     private void applyForm(SysUser user, SysUserForm form) {

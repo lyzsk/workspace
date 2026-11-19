@@ -17,7 +17,8 @@ public final class WebRequestUtils {
     }
 
     public static HttpServletRequest currentRequest() {
-        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        RequestAttributes attributes =
+            RequestContextHolder.getRequestAttributes();
         if (attributes instanceof ServletRequestAttributes servletAttributes) {
             return servletAttributes.getRequest();
         }

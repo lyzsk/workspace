@@ -10,10 +10,10 @@ import { loadFull } from "tsparticles";
 import App from "./App.vue";
 import router from "./router";
 import i18n from "./langs";
-import { getMe } from "./api/auth";
 import { permission } from "./directives/permission";
 import "./plugins/iconify";
 import { useAppStore } from "./store/modules/app";
+import { usePermissionStore } from "./store/modules/permission";
 import { useUserStore } from "./store/modules/user";
 import { installDevtoolsGuard } from "./utils/devtoolsGuard";
 import "./assets/styles/index.scss";
@@ -28,6 +28,30 @@ app.use(pinia);
 
 const appStore = useAppStore(pinia);
 appStore.applyTheme();
+
+const userStore = useUserStore(pinia);
+const permissionStore = usePermissionStore(pinia);
+userStore.onAuthChange((snapshot) => {
+    if (
+        snapshot.status === "restoring" ||
+        snapshot.status === "refreshing" ||
+        snapshot.user
+    ) {
+        return;
+    }
+    permissionStore.reset();
+    const current = router.currentRoute.value;
+    if (current.name === "Login") {
+        return;
+    }
+    const query: Record<string, string> = {
+        redirect: current.fullPath,
+    };
+    if (snapshot.reason === "expired" || snapshot.reason === "idle") {
+        query.reason = snapshot.reason;
+    }
+    void router.replace({ name: "Login", query });
+});
 
 app.use(router);
 app.use(i18n);
@@ -47,9 +71,4 @@ if (import.meta.hot) {
 
 app.mount("#app");
 
-const userStore = useUserStore(pinia);
-if (userStore.isLogin) {
-    getMe()
-        .then((user) => userStore.setUser(user))
-        .catch(() => {});
-}
+void userStore.restore().catch(() => undefined);

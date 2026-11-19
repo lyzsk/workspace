@@ -14,6 +14,8 @@ import java.util.List;
 @Data
 public class SysRoleForm {
 
+    private String appCode = "workspace";
+
     @NotBlank(message = "角色编码不能为空")
     @Size(max = 50)
     private String roleCode;

@@ -27,7 +27,7 @@
                     <el-table-column prop="basePath" label="路由前缀" min-width="140" />
                     <el-table-column
                         prop="moduleEntry"
-                        label="微前端模块入口"
+                        label="Qiankun HTML 入口"
                         min-width="230"
                         show-overflow-tooltip
                     />
@@ -91,11 +91,14 @@
                 <el-form-item label="路由前缀" required>
                     <el-input v-model.trim="form.basePath" placeholder="如 /apps/ies" />
                 </el-form-item>
-                <el-form-item label="微前端模块入口" required>
+                <el-form-item label="HTML 入口" required>
                     <el-input
                         v-model.trim="form.moduleEntry"
-                        placeholder="如 /ies/micro/ies-micro.js"
+                        placeholder="如 /ies/index.html"
                     />
+                    <div class="form-help">
+                        填写可由 qiankun 加载的 HTML 文档地址，不填写 single-spa 的 JS/TS 模块地址。
+                    </div>
                 </el-form-item>
                 <el-form-item label="微前端样式入口">
                     <el-input
@@ -241,7 +244,7 @@ async function save() {
         !form.value.basePath ||
         !form.value.moduleEntry
     ) {
-        ElMessage.warning("应用编码、名称、路由和模块入口不能为空");
+        ElMessage.warning("应用编码、名称、路由和 HTML 入口不能为空");
         return;
     }
     saving.value = true;
@@ -273,3 +276,12 @@ async function remove(row: AppInfo) {
 
 onMounted(load);
 </script>
+
+<style scoped>
+.form-help {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+</style>

@@ -2,7 +2,7 @@ package cn.sichu.system.auth.service.impl;
 
 import cn.sichu.common.exception.BusinessException;
 import cn.sichu.common.result.ResultCode;
-import cn.sichu.common.utils.TextUtils;
+import cn.sichu.system.auth.model.LoginAuthentication;
 import cn.sichu.system.auth.model.form.LoginForm;
 import cn.sichu.system.auth.model.form.PasswordForm;
 import cn.sichu.system.auth.model.form.ProfileForm;
@@ -12,15 +12,12 @@ import cn.sichu.system.auth.model.vo.UserOrgVO;
 import cn.sichu.system.auth.service.IAuthService;
 import cn.sichu.system.auth.service.ILoginLogService;
 import cn.sichu.system.code.SystemCode;
-import cn.sichu.system.security.entity.SysUserSession;
 import cn.sichu.system.security.mapper.AuthQueryMapper;
 import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.system.security.service.AuthTokenStore;
-import cn.sichu.system.security.token.JwtTokenManager;
-import cn.sichu.system.security.token.TokenException;
-import cn.sichu.system.security.token.TokenPayload;
+import cn.sichu.system.security.service.OpaqueTokenService;
+import cn.sichu.system.security.token.IssuedTokens;
 import cn.sichu.system.security.util.SecurityUtils;
-import cn.sichu.system.security.util.WebRequestUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.mapper.SysUserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -38,7 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Objects;
 
 /**
@@ -51,7 +47,7 @@ import java.util.Objects;
 public class AuthServiceImpl implements IAuthService {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenManager tokenManager;
+    private final OpaqueTokenService tokenService;
     private final SysUserMapper userMapper;
     private final AuthQueryMapper authQueryMapper;
     private final AuthTokenStore authTokenStore;
@@ -65,14 +61,16 @@ public class AuthServiceImpl implements IAuthService {
     private long lockMinutes;
 
     @Override
-    public LoginVO login(LoginForm form) {
+    public LoginAuthentication login(LoginForm form) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(form.username(), form.password()));
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             resetLoginFailure(loginUser.getUserId());
             loginLogService.recordSuccess(loginUser);
-            return new LoginVO(issueAccessToken(loginUser), toUserInfo(loginUser));
+            IssuedTokens tokens = tokenService.createSession(loginUser);
+            LoginVO login = new LoginVO(tokens.accessToken(), toUserInfo(loginUser));
+            return new LoginAuthentication(login, tokens.refreshToken(), tokens.sessionExpiresAt());
         } catch (LockedException e) {
             loginLogService.recordFailure(form.username(), "账号已锁定");
             throw new BusinessException(SystemCode.ACCOUNT_LOCKED);
@@ -90,16 +88,16 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     @Override
-    public void logout(String accessToken) {
-        if (accessToken == null) {
-            return;
-        }
-        try {
-            TokenPayload payload = tokenManager.parseAccessToken(accessToken);
-            authTokenStore.revokeAccessToken(payload.tokenId(), payload.expiresAt());
-            authTokenStore.revokeSession(payload.tokenId());
-        } catch (TokenException ignored) {
-        }
+    public LoginAuthentication refresh(String refreshToken) {
+        IssuedTokens tokens = tokenService.refresh(refreshToken);
+        LoginUser user = loadLoginUser(tokens.userId());
+        LoginVO login = new LoginVO(tokens.accessToken(), toUserInfo(user));
+        return new LoginAuthentication(login, tokens.refreshToken(), tokens.sessionExpiresAt());
+    }
+
+    @Override
+    public void logout(String accessToken, String refreshToken) {
+        tokenService.logout(accessToken, refreshToken);
     }
 
     @Override
@@ -149,24 +147,13 @@ public class AuthServiceImpl implements IAuthService {
         authTokenStore.revokeAllSessions(userId);
     }
 
-    private String issueAccessToken(LoginUser user) {
-        String accessToken = tokenManager.createAccessToken(user.getUserId(), user.getUsername(),
-            user.getTenantId(), user.getTokenVersion());
-        TokenPayload payload = tokenManager.parseAccessToken(accessToken);
-
-        SysUserSession session = new SysUserSession();
-        session.setTenantId(user.getTenantId());
-        session.setUserId(user.getUserId());
-        session.setJti(payload.tokenId());
-        session.setLoginTime(LocalDateTime.now());
-        session.setLastSeenAt(LocalDateTime.now());
-        session.setExpiresAt(
-            LocalDateTime.ofInstant(payload.expiresAt(), ZoneId.systemDefault()));
-        session.setRevoked(0);
-        session.setIp(TextUtils.truncate(WebRequestUtils.clientIp(), 64));
-        session.setUserAgent(TextUtils.truncate(WebRequestUtils.userAgent(), 500));
-        authTokenStore.saveSession(session);
-        return accessToken;
+    private LoginUser loadLoginUser(Long userId) {
+        SysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(SystemCode.USER_NOT_FOUND);
+        }
+        return new LoginUser(user, authQueryMapper.selectRoleCodes(userId),
+            authQueryMapper.selectPermissions(userId));
     }
 
     private UserInfoVO toUserInfo(LoginUser user) {
@@ -190,7 +177,8 @@ public class AuthServiceImpl implements IAuthService {
         int failCount = current + 1;
 
         LambdaUpdateWrapper<SysUser> update = new LambdaUpdateWrapper<>();
-        update.eq(SysUser::getId, user.getId()).set(SysUser::getLoginFailCount, failCount);
+        update.eq(SysUser::getId, user.getId()).set(SysUser::getLoginFailCount, failCount)
+            .set(SysUser::getUpdateTime, LocalDateTime.now());
         if (failCount >= maxFailCount) {
             update.set(SysUser::getLockedUntil, LocalDateTime.now().plusMinutes(lockMinutes));
         }
@@ -200,9 +188,9 @@ public class AuthServiceImpl implements IAuthService {
 
     private void resetLoginFailure(Long userId) {
         LambdaUpdateWrapper<SysUser> update = new LambdaUpdateWrapper<>();
-        update.eq(SysUser::getId, userId)
-            .set(SysUser::getLoginFailCount, 0)
-            .set(SysUser::getLockedUntil, null);
+        update.eq(SysUser::getId, userId).set(SysUser::getLoginFailCount, 0)
+            .set(SysUser::getLockedUntil, null)
+            .set(SysUser::getUpdateTime, LocalDateTime.now());
         userMapper.update(null, update);
     }
 }

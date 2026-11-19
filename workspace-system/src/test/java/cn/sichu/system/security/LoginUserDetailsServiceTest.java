@@ -51,6 +51,18 @@ class LoginUserDetailsServiceTest {
     }
 
     @Test
+    void loadsUserByIdForOpaqueAuthentication() {
+        when(userMapper.selectById(1L)).thenReturn(user());
+        when(authQueryMapper.selectRoleCodes(1L)).thenReturn(List.of("ADMIN"));
+        when(authQueryMapper.selectPermissions(1L)).thenReturn(List.of("sys:user:list"));
+
+        LoginUser details = userDetailsService.loadUserById(1L);
+
+        assertEquals(1L, details.getUserId());
+        assertEquals("admin", details.getUsername());
+    }
+
+    @Test
     void rejectsUnknownUser() {
         when(userMapper.selectOne(any())).thenReturn(null);
 

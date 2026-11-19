@@ -29,7 +29,8 @@ public class JobExecution extends QuartzJobBean {
     private ApplicationContext applicationContext;
 
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+    protected void executeInternal(JobExecutionContext context)
+        throws JobExecutionException {
         JobDataMap data = context.getMergedJobDataMap();
         Long jobId = data.getLong("JOB_ID");
         String jobName = data.getString("JOB_NAME");
@@ -47,7 +48,8 @@ public class JobExecution extends QuartzJobBean {
         entry.setStatus(1);
 
         try {
-            applicationContext.getBean(handlerName, JobHandler.class).execute(params);
+            applicationContext.getBean(handlerName, JobHandler.class)
+                .execute(params);
             entry.setCostTime(System.currentTimeMillis() - start);
         } catch (Exception e) {
             entry.setStatus(0);

@@ -1,9 +1,8 @@
-import axios from "axios";
 import { onMounted, onUnmounted } from "vue";
 import { touch } from "@/api/auth";
 import { SessionConfig } from "@/config/session";
 import { useUserStore } from "@/store/modules/user";
-import { handleSessionExpired, isExpired } from "@/utils/session";
+import { isExpired } from "@/utils/session";
 
 const ACTIVITY_EVENTS = [
     "mousemove",
@@ -33,10 +32,7 @@ export function useSessionHeartbeat() {
         touching = true;
         try {
             await touch({ silent: true });
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                handleSessionExpired("expired");
-            }
+        } catch {
         } finally {
             touching = false;
         }

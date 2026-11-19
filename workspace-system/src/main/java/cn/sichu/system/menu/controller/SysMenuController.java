@@ -40,8 +40,9 @@ public class SysMenuController {
     @GetMapping("/tree")
     @PreAuthorize("@ss.hasPerm('sys:menu:list') or @ss.hasPerm('sys:role:assign') or @ss.hasPerm('sys:role:update')")
     public Result<List<SysMenuTreeVO>> tree(
-        @RequestParam(defaultValue = "false") boolean includeButtons) {
-        return Result.success(menuService.tree(includeButtons));
+        @RequestParam(defaultValue = "false") boolean includeButtons,
+        @RequestParam(required = false) String appCode) {
+        return Result.success(menuService.tree(includeButtons, appCode));
     }
 
     @PostMapping

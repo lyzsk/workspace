@@ -1,7 +1,5 @@
 import { request } from "@/utils/http";
 import type {
-    LoginPayload,
-    LoginResult,
     PasswordPayload,
     ProfilePayload,
     UserInfo,
@@ -20,25 +18,6 @@ const MOCK_USER: UserInfo = {
 
 function wait(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function login(payload: LoginPayload): Promise<LoginResult> {
-    if (USE_MOCK) {
-        await wait(500);
-        if (payload.username && payload.password) {
-            return {
-                token: `mock-token-${Date.now()}`,
-                user: MOCK_USER,
-            };
-        }
-        throw new Error("INVALID_CREDENTIALS");
-    }
-
-    return request<LoginResult>({
-        url: "/auth/login",
-        method: "post",
-        data: payload,
-    });
 }
 
 export async function getMe(): Promise<UserInfo> {
@@ -79,20 +58,6 @@ export async function touch(options?: { silent?: boolean }): Promise<void> {
     await request<void>(
         {
             url: "/auth/touch",
-            method: "post",
-        },
-        { silent: options?.silent },
-    );
-}
-
-export async function logout(options?: { silent?: boolean }): Promise<void> {
-    if (USE_MOCK) {
-        return;
-    }
-
-    await request<void>(
-        {
-            url: "/auth/logout",
             method: "post",
         },
         { silent: options?.silent },

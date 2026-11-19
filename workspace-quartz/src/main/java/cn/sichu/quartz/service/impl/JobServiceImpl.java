@@ -32,7 +32,8 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob> implements IJobService {
+public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob>
+    implements IJobService {
 
     private final SchedulerManager schedulerManager;
     private final Map<String, JobHandler> handlers;
@@ -41,13 +42,16 @@ public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob> implements IJ
     public PageResult<SysJobVO> page(SysJobQuery query) {
         Page<SysJob> page = new Page<>(query.getPageNum(), query.getPageSize());
         LambdaQueryWrapper<SysJob> wrapper =
-            new LambdaQueryWrapper<SysJob>().like(StringUtils.hasText(query.getJobName()),
-                    SysJob::getJobName, query.getJobName())
-                .eq(query.getStatus() != null, SysJob::getStatus, query.getStatus())
-                .orderByDesc(SysJob::getCreateTime);
+            new LambdaQueryWrapper<SysJob>().like(
+                    StringUtils.hasText(query.getJobName()), SysJob::getJobName,
+                    query.getJobName())
+                .eq(query.getStatus() != null, SysJob::getStatus,
+                    query.getStatus()).orderByDesc(SysJob::getCreateTime);
         Page<SysJob> result = baseMapper.selectPage(page, wrapper);
-        List<SysJobVO> records = result.getRecords().stream().map(this::toVO).toList();
-        return PageResult.of(records, result.getTotal(), result.getCurrent(), result.getSize());
+        List<SysJobVO> records =
+            result.getRecords().stream().map(this::toVO).toList();
+        return PageResult.of(records, result.getTotal(), result.getCurrent(),
+            result.getSize());
     }
 
     @Override
@@ -113,12 +117,13 @@ public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob> implements IJ
             action.run();
             return;
         }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                action.run();
-            }
-        });
+        TransactionSynchronizationManager.registerSynchronization(
+            new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
     }
 
     private SysJob required(Long id) {
@@ -131,7 +136,8 @@ public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob> implements IJ
 
     private void validate(SysJobForm form) {
         if (!CronExpression.isValidExpression(form.getCronExpression())) {
-            throw new BusinessException(ResultCode.PARAM_ERROR, "cron 表达式无效");
+            throw new BusinessException(ResultCode.PARAM_ERROR,
+                "cron 表达式无效");
         }
         if (!handlers.containsKey(form.getHandlerName())) {
             throw new BusinessException(ResultCode.PARAM_ERROR,
@@ -141,12 +147,14 @@ public class JobServiceImpl extends BaseImpl<SysJobMapper, SysJob> implements IJ
 
     private void apply(SysJob job, SysJobForm form) {
         job.setJobName(form.getJobName());
-        job.setJobGroup(form.getJobGroup() == null || form.getJobGroup().isBlank() ? "SYSTEM" :
-            form.getJobGroup());
+        job.setJobGroup(
+            form.getJobGroup() == null || form.getJobGroup().isBlank() ?
+                "SYSTEM" : form.getJobGroup());
         job.setCronExpression(form.getCronExpression());
         job.setHandlerName(form.getHandlerName());
         job.setParams(form.getParams());
-        job.setMisfirePolicy(form.getMisfirePolicy() == null ? 1 : form.getMisfirePolicy());
+        job.setMisfirePolicy(
+            form.getMisfirePolicy() == null ? 1 : form.getMisfirePolicy());
         job.setStatus(form.getStatus() == null ? 0 : form.getStatus());
     }
 

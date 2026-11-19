@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,9 +38,11 @@ public class OnlineUserServiceImpl implements IOnlineUserService {
     }
 
     @Override
+    @Transactional
     public void kick(Long userId) {
         LambdaUpdateWrapper<SysUser> update = new LambdaUpdateWrapper<>();
-        update.eq(SysUser::getId, userId).setSql("token_version = token_version + 1");
+        update.eq(SysUser::getId, userId).setSql("token_version = token_version + 1")
+            .set(SysUser::getUpdateTime, LocalDateTime.now());
         userMapper.update(null, update);
         authTokenStore.revokeAllSessions(userId);
     }

@@ -20,11 +20,11 @@ export function getMyMenus() {
     return request<MenuNode[]>({ url: "/system/menus/my", method: "get" });
 }
 
-export function getMenuTree(includeButtons = false) {
+export function getMenuTree(includeButtons = false, appCode = "workspace") {
     return request<MenuNode[]>({
         url: "/system/menus/tree",
         method: "get",
-        params: { includeButtons },
+        params: { includeButtons, appCode },
     });
 }
 

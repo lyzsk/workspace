@@ -10,8 +10,17 @@ workspace:
     secret: ${JWT_SECRET:dev-only-workspace-secret-0123456789abcdef}
     issuer: workspace
     access-token-ttl: 12h
+  auth:
+    access-token-ttl: ${ACCESS_TOKEN_TTL:30m}
+    gateway-token: ${GATEWAY_INTERNAL_TOKEN:dev-only-gateway-token-change-me}
+    refresh-cookie:
+      name: workspace_refresh
+      secure: ${REFRESH_COOKIE_SECURE:false}
+      same-site: Lax
+      path: /api/auth
   session:
     idle-timeout: 30m
+    absolute-timeout: ${SESSION_ABSOLUTE_TIMEOUT:12h}
   generator:
     enabled: false
   login:
@@ -43,9 +52,21 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   application:
-    name: workspace-admin
+    name: workspace-service
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+      discovery:
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
   quartz:
     job-store-type: memory
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:2s}
   datasource:
     url: jdbc:postgresql://localhost:5432/workspace?currentSchema=system
     username: workspace

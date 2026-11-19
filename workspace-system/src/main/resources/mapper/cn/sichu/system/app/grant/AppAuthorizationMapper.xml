@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sichu.system.app.grant.mapper.AppAuthorizationMapper">
+
+    <select id="selectAccessibleApps" resultType="cn.sichu.system.app.entity.SysApp">
+        SELECT a.*
+        FROM sys_app a
+        JOIN sys_user_app ua ON ua.app_id = a.id AND ua.is_deleted = 0 AND ua.status = 1
+        JOIN sys_user u ON u.id = ua.user_id AND u.is_deleted = 0 AND u.status = 1
+        WHERE ua.user_id = #{userId}
+          AND a.is_deleted = 0
+          AND a.status = 1
+          AND a.code &lt;&gt; 'workspace'
+          AND EXISTS (
+              SELECT 1
+              FROM sys_user_role ur
+              JOIN sys_role r ON r.id = ur.role_id AND r.app_id = a.id
+                  AND r.is_deleted = 0 AND r.status = 1
+              WHERE ur.user_id = #{userId} AND ur.is_deleted = 0
+          )
+        ORDER BY a.sort_no, a.id
+    </select>
+
+    <select id="selectRoles" resultType="cn.sichu.system.role.entity.SysRole">
+        SELECT r.*
+        FROM sys_role r
+        JOIN sys_app a ON a.id = r.app_id AND a.is_deleted = 0
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        WHERE ur.user_id = #{userId}
+          AND a.code = #{appCode}
+          AND r.is_deleted = 0
+          AND r.status = 1
+        ORDER BY r.role_sort, r.id
+    </select>
+
+    <select id="selectAssignedRoles" resultType="cn.sichu.system.role.entity.SysRole">
+        SELECT r.*
+        FROM sys_role r
+        JOIN sys_app a ON a.id = r.app_id AND a.is_deleted = 0
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        WHERE ur.user_id = #{userId}
+          AND a.code = #{appCode}
+          AND r.is_deleted = 0
+        ORDER BY r.role_sort, r.id
+    </select>
+
+    <select id="selectRoleCodes" resultType="java.lang.String">
+        SELECT r.role_code
+        FROM sys_role r
+        JOIN sys_app a ON a.id = r.app_id AND a.is_deleted = 0
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        WHERE ur.user_id = #{userId}
+          AND a.code = #{appCode}
+          AND r.is_deleted = 0
+          AND r.status = 1
+    </select>
+
+    <select id="selectPermissions" resultType="java.lang.String">
+        SELECT DISTINCT m.permission
+        FROM sys_app a
+        JOIN sys_role r ON r.app_id = a.id AND r.is_deleted = 0 AND r.status = 1
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        JOIN sys_role_menu rm ON rm.role_id = r.id AND rm.is_deleted = 0
+        JOIN sys_menu m ON m.app_code = a.code AND m.is_deleted = 0 AND m.status = 1
+            AND m.id = rm.menu_id
+        WHERE ur.user_id = #{userId}
+          AND a.code = #{appCode}
+          AND a.is_deleted = 0
+          AND m.permission IS NOT NULL
+          AND m.permission &lt;&gt; ''
+    </select>
+
+    <select id="selectMenus" resultType="cn.sichu.system.menu.entity.SysMenu">
+        SELECT DISTINCT m.*
+        FROM sys_app a
+        JOIN sys_role r ON r.app_id = a.id AND r.is_deleted = 0 AND r.status = 1
+        JOIN sys_user_role ur ON ur.role_id = r.id AND ur.is_deleted = 0
+        JOIN sys_role_menu rm ON rm.role_id = r.id AND rm.is_deleted = 0
+        JOIN sys_menu m ON m.id = rm.menu_id AND m.app_code = a.code
+            AND m.is_deleted = 0 AND m.status = 1
+        WHERE ur.user_id = #{userId}
+          AND a.code = #{appCode}
+          AND a.is_deleted = 0
+          AND m.menu_type IN ('DIR', 'MENU')
+          AND m.hidden = 1
+        ORDER BY m.sort_no, m.id
+    </select>
+
+    <select id="selectAllMenus" resultType="cn.sichu.system.menu.entity.SysMenu">
+        SELECT m.*
+        FROM sys_menu m
+        WHERE m.app_code = #{appCode}
+          AND m.is_deleted = 0
+          AND m.status = 1
+          AND m.menu_type IN ('DIR', 'MENU')
+          AND m.hidden = 1
+        ORDER BY m.sort_no, m.id
+    </select>
+
+    <select id="selectAllPermissions" resultType="java.lang.String">
+        SELECT DISTINCT m.permission
+        FROM sys_menu m
+        WHERE m.app_code = #{appCode}
+          AND m.is_deleted = 0
+          AND m.status = 1
+          AND m.permission IS NOT NULL
+          AND m.permission &lt;&gt; ''
+    </select>
+
+</mapper>

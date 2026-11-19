@@ -20,6 +20,8 @@ public interface IRoleService {
 
     List<SysRoleVO> listActive();
 
+    List<SysRoleVO> listActive(String appCode);
+
     Long create(SysRoleForm form);
 
     void update(Long id, SysRoleForm form);

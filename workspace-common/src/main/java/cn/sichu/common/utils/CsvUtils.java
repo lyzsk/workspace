@@ -19,17 +19,19 @@ public final class CsvUtils {
     private CsvUtils() {
     }
 
-    public static void write(HttpServletResponse response, String filename, List<String> headers,
-        List<List<String>> rows) throws IOException {
+    public static void write(HttpServletResponse response, String filename,
+        List<String> headers, List<List<String>> rows) throws IOException {
         response.setContentType("text/csv;charset=UTF-8");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
             "attachment; filename=\"" + filename + "\"");
         PrintWriter writer = response.getWriter();
         writer.write('﻿');
-        writer.println(headers.stream().map(CsvUtils::escape).collect(Collectors.joining(",")));
+        writer.println(headers.stream().map(CsvUtils::escape)
+            .collect(Collectors.joining(",")));
         for (List<String> row : rows) {
-            writer.println(row.stream().map(CsvUtils::escape).collect(Collectors.joining(",")));
+            writer.println(row.stream().map(CsvUtils::escape)
+                .collect(Collectors.joining(",")));
         }
         writer.flush();
     }
@@ -38,8 +40,8 @@ public final class CsvUtils {
         if (value == null) {
             return "";
         }
-        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains(
-            "\r")) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")
+            || value.contains("\r")) {
             return "\"" + value.replace("\"", "\"\"") + "\"";
         }
         return value;

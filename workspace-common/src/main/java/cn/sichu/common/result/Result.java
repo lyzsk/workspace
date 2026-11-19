@@ -55,6 +55,7 @@ public class Result<T> implements Serializable {
     }
 
     public static boolean isSuccess(Result<?> result) {
-        return result != null && ResultCode.SUCCESS.getCode() == result.getCode();
+        return result != null
+            && ResultCode.SUCCESS.getCode() == result.getCode();
     }
 }

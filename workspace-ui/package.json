@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -23,9 +24,9 @@
     "nprogress": "^0.2.0",
     "pinia": "^4.1.0",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "qiankun": "^2.10.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "single-spa": "^6.0.3",
     "tsparticles": "^4.6.0",
     "vue": "^3.5.44",
     "vue-i18n": "^9.14.5",
@@ -41,6 +42,7 @@
     "sass": "^1.108.2",
     "typescript": "~6.0.3",
     "vite": "^8.3.6",
+    "vitest": "^5.1.1",
     "vue-tsc": "^3.3.14"
   }
 }

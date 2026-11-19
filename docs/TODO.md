@@ -1,5 +1,17 @@
 # TODO
 
+## 微前端与云原生改造（2026-11-19）
+
+- [x] Nacos Discovery + Spring Cloud Gateway 骨架、RequestId、统一错误、Redis 限流配置
+- [x] 不透明 access token、HttpOnly refresh 轮换、Redis 集群状态、Gateway introspection 与可信身份头
+- [x] single-spa → qiankun、统一 AuthBridge、401 single-flight 刷新、退出和竞态收口
+- [x] 用户—应用授权、角色应用归属、子应用菜单/角色统一管理与有效授权查询
+- [x] Flyway V4～V6 已在本地库执行并登记成功
+- [ ] 启动 Nacos/Redis/Gateway/新版 workspace-service，完成真实登录、刷新、撤权和 WebSocket 联调
+- [ ] 将历史 single-spa ESM 入口迁移为 qiankun HTML entry；未迁移前不算现有子应用已接入
+- [ ] 为现有应用配置 workspace 管理的应用角色与菜单；无有效角色时新规则不允许进入
+- [ ] 集群上线前完成 Quartz JDBC Cluster、Redis WebSocket 广播、共享文件存储和唯一雪花 workerId
+
 ## 本轮（2026-11-17）
 
 - [x] 删除 ticket 死通道（2026-11-17）：workspace 侧 `EapToolServiceTicket*` 5 类 + `workspace-ui/src/api/system/eap-tool-service.ts` + `application.yml` 的 `workspace.eap-tool-service.*`；EAP 侧 `TicketVerifier` + `/auth/ticket-login` + 前端 `ticketLogin` + `eap-tool-service.ticket.*` 配置；`.claude/CLAUDE.md` 命名示例已更换

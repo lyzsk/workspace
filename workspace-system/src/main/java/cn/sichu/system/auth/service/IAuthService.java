@@ -1,9 +1,9 @@
 package cn.sichu.system.auth.service;
 
+import cn.sichu.system.auth.model.LoginAuthentication;
 import cn.sichu.system.auth.model.form.LoginForm;
 import cn.sichu.system.auth.model.form.PasswordForm;
 import cn.sichu.system.auth.model.form.ProfileForm;
-import cn.sichu.system.auth.model.vo.LoginVO;
 import cn.sichu.system.auth.model.vo.UserInfoVO;
 
 /**
@@ -13,9 +13,11 @@ import cn.sichu.system.auth.model.vo.UserInfoVO;
  */
 public interface IAuthService {
 
-    LoginVO login(LoginForm form);
+    LoginAuthentication login(LoginForm form);
 
-    void logout(String accessToken);
+    LoginAuthentication refresh(String refreshToken);
+
+    void logout(String accessToken, String refreshToken);
 
     UserInfoVO currentUser();
 

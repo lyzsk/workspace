@@ -31,7 +31,8 @@ public class GeneratorMetadataService {
                 + "FROM information_schema.columns WHERE table_schema = ? AND table_name = ? "
                 + "ORDER BY ordinal_position",
             (rs, rowNum) -> new GenColumn(rs.getString("column_name"),
-                rs.getString("data_type"), "YES".equals(rs.getString("is_nullable")),
+                rs.getString("data_type"),
+                "YES".equals(rs.getString("is_nullable")),
                 rs.getString("col_description")), schemaName, tableName);
     }
 }

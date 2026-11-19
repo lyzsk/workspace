@@ -3,6 +3,7 @@ import { formatFileStamp } from "@/utils/format";
 import type { PageResult, RoleRow } from "@/types/system";
 
 export interface RoleForm {
+    appCode?: string;
     roleCode: string;
     roleName: string;
     dataScope?: number;
@@ -22,8 +23,8 @@ export function pageRoles(params: Record<string, unknown>) {
     });
 }
 
-export function listRoles() {
-    return request<RoleRow[]>({ url: "/system/roles/list", method: "get" });
+export function listRoles(appCode = "workspace") {
+    return request<RoleRow[]>({ url: "/system/roles/list", method: "get", params: { appCode } });
 }
 
 export function createRole(data: RoleForm) {

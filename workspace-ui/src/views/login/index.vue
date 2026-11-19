@@ -178,10 +178,7 @@ import {
     type FormRules,
 } from "element-plus";
 import DragVerify from "@/components/core/forms/drag-verify/index.vue";
-import { resetExpired } from "@/utils/session";
-import { resetSessionEnding } from "@/utils/draft";
 import ParticleBackground from "@/components/core/views/login/particle-background/index.vue";
-import { login as loginApi } from "@/api/auth";
 import { useAppStore } from "@/store/modules/app";
 import { useUserStore } from "@/store/modules/user";
 import { usePermissionStore } from "@/store/modules/permission";
@@ -246,15 +243,12 @@ async function submit() {
 
     loading.value = true;
     try {
-        const result = await loginApi({
+        await userStore.login({
             username: form.username,
             password: form.password,
         });
 
-        userStore.setLogin(result);
         usePermissionStore().reset();
-        resetExpired();
-        resetSessionEnding();
 
         ElNotification({
             title: t("login.success"),

@@ -224,7 +224,6 @@ import { usePermissionStore } from "@/store/modules/permission";
 import type { MenuNode } from "@/types/system";
 import { toggleThemeWithAnimation } from "@/utils/themeAnimation";
 import { dataRefreshKey, applyPendingDataChange } from "@/utils/dataChange";
-import { resetExpired } from "@/utils/session";
 import { useIdleLogout } from "@/composables/useIdleLogout";
 import { useSessionHeartbeat } from "@/composables/useSessionHeartbeat";
 import { ElNotification } from "element-plus";
@@ -393,8 +392,7 @@ async function onDataRefresh(event: Event) {
     if (permissionChanged) {
         try {
             userStore.setUser(await getMe());
-            permissionStore.reset();
-            await permissionStore.loadAndBuild(router);
+            await permissionStore.loadAndBuild(router, true);
             try {
                 await router.replace(router.currentRoute.value.fullPath);
             } catch (error) {
@@ -420,7 +418,6 @@ useIdleLogout();
 useSessionHeartbeat();
 
 onMounted(() => {
-    resetExpired();
     document.addEventListener("fullscreenchange", syncFullscreen);
     document.addEventListener("click", closeNoticeOnOutside);
     document.addEventListener("visibilitychange", onVisibilityChange);

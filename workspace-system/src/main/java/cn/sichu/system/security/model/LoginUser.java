@@ -40,7 +40,8 @@ public class LoginUser implements UserDetails {
     private final Set<String> roles;
     private final Set<String> permissions;
 
-    public LoginUser(SysUser user, Collection<String> roles, Collection<String> permissions) {
+    public LoginUser(SysUser user, Collection<String> roles,
+        Collection<String> permissions) {
         this.userId = user.getId();
         this.username = user.getUsername();
         this.password = user.getPassword();
@@ -52,7 +53,8 @@ public class LoginUser implements UserDetails {
         this.deptId = user.getDeptId();
         this.gender = user.getGender();
         this.status = user.getStatus();
-        this.tokenVersion = user.getTokenVersion() == null ? 0L : user.getTokenVersion();
+        this.tokenVersion =
+            user.getTokenVersion() == null ? 0L : user.getTokenVersion();
         this.lockedUntil = user.getLockedUntil();
         this.roles = new LinkedHashSet<>(roles);
         this.permissions = new LinkedHashSet<>(permissions);
@@ -60,11 +62,8 @@ public class LoginUser implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Stream.concat(
-                roles.stream().map(role -> "ROLE_" + role),
-                permissions.stream())
-            .map(SimpleGrantedAuthority::new)
-            .toList();
+        return Stream.concat(roles.stream().map(role -> "ROLE_" + role),
+            permissions.stream()).map(SimpleGrantedAuthority::new).toList();
     }
 
     @Override

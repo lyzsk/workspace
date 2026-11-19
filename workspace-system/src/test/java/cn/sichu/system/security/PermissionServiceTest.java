@@ -1,9 +1,12 @@
 package cn.sichu.system.security;
 
+import cn.sichu.system.app.grant.model.vo.AppAuthorizationVO;
+import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.system.security.service.PermissionService;
 import cn.sichu.system.user.entity.SysUser;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +16,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
  *
  * @author sichu huang
@@ -20,7 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PermissionServiceTest {
 
-    private final PermissionService permissionService = new PermissionService();
+    private PermissionService permissionService;
+
+    @BeforeEach
+    void setUp() {
+        IAppAuthorizationService authorizationService = mock(IAppAuthorizationService.class);
+        AppAuthorizationVO authorization = new AppAuthorizationVO();
+        authorization.setAccessible(true);
+        when(authorizationService.getAuthorization(any(), eq("workspace"))).thenReturn(authorization);
+        permissionService = new PermissionService(authorizationService);
+    }
 
     @AfterEach
     void tearDown() {

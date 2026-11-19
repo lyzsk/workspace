@@ -20,6 +20,9 @@ public class InternalUserSyncVO {
     private Integer gender;
     private Long deptId;
     private Integer status;
+    private Integer userStatus;
+    private Integer appStatus;
+    private Integer grantStatus;
     private String passwordHash;
     private LocalDateTime updatedAt;
 }

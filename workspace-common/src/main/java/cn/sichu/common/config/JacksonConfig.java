@@ -14,7 +14,8 @@ import org.springframework.context.annotation.Configuration;
 public class JacksonConfig {
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer longToStringCustomizer() {
-        return builder -> builder.serializerByType(Long.class, ToStringSerializer.instance)
+        return builder -> builder.serializerByType(Long.class,
+                ToStringSerializer.instance)
             .serializerByType(Long.TYPE, ToStringSerializer.instance);
     }
 }

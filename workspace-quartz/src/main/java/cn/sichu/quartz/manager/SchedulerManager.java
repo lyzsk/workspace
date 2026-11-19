@@ -94,8 +94,10 @@ public class SchedulerManager {
 
     public void reconcileWith(List<SysJob> jobs) {
         try {
-            Set<JobKey> expected = jobs.stream().map(this::jobKey).collect(Collectors.toSet());
-            for (JobKey existing : scheduler.getJobKeys(GroupMatcher.anyGroup())) {
+            Set<JobKey> expected =
+                jobs.stream().map(this::jobKey).collect(Collectors.toSet());
+            for (JobKey existing : scheduler.getJobKeys(
+                GroupMatcher.anyGroup())) {
                 if (!expected.contains(existing)) {
                     scheduler.deleteJob(existing);
                 }
@@ -123,7 +125,8 @@ public class SchedulerManager {
     }
 
     private TriggerKey triggerKey(SysJob job) {
-        return TriggerKey.triggerKey("TRG_JOB_" + job.getId(), job.getJobGroup());
+        return TriggerKey.triggerKey("TRG_JOB_" + job.getId(),
+            job.getJobGroup());
     }
 
     private JobDetail jobDetail(SysJob job) {
@@ -132,7 +135,8 @@ public class SchedulerManager {
     }
 
     private CronTrigger cronTrigger(SysJob job) {
-        CronScheduleBuilder builder = CronScheduleBuilder.cronSchedule(job.getCronExpression());
+        CronScheduleBuilder builder =
+            CronScheduleBuilder.cronSchedule(job.getCronExpression());
         Integer policy = job.getMisfirePolicy();
         if (policy != null && policy == 0) {
             builder.withMisfireHandlingInstructionIgnoreMisfires();
@@ -141,8 +145,8 @@ public class SchedulerManager {
         } else {
             builder.withMisfireHandlingInstructionDoNothing();
         }
-        return TriggerBuilder.newTrigger().withIdentity(triggerKey(job)).withSchedule(builder)
-            .build();
+        return TriggerBuilder.newTrigger().withIdentity(triggerKey(job))
+            .withSchedule(builder).build();
     }
 
     private JobDataMap jobData(SysJob job) {

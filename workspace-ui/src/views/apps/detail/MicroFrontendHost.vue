@@ -17,27 +17,22 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { getAppRuntime, type AppInfo } from "@/api/system/app";
-import { logout as logoutApi } from "@/api/auth";
+import { authBridge, createScopedAuthBridge } from "@/microfrontend/authBridge";
 import { useAppStore } from "@/store/modules/app";
-import { usePermissionStore } from "@/store/modules/permission";
 import { useUserStore } from "@/store/modules/user";
-import { clearDraftsForUser } from "@/utils/draft";
 import {
     emitMicroFrontendEvent,
     onMicroFrontendEvent,
     type MicroFrontendEventDetail,
 } from "@/utils/microFrontendEvents";
-import { handleSessionExpired } from "@/utils/session";
-import { registerMicroApplication } from "@/utils/singleSpa";
+import { mountMicroApplication } from "@/utils/qiankun";
 
 defineOptions({ name: "MicroFrontendHost" });
 
 const route = useRoute();
-const router = useRouter();
 const appStore = useAppStore();
-const permissionStore = usePermissionStore();
 const userStore = useUserStore();
 const app = ref<AppInfo | null>(null);
 const loading = ref(false);
@@ -45,10 +40,11 @@ const error = ref("");
 const microContainer = ref<HTMLElement>();
 
 let disposed = false;
+let routeSequence = 0;
 let activeCode = "";
+let activePath = "";
 let cleanupMicro: (() => Promise<void>) | null = null;
 let offMicroEvent: (() => void) | null = null;
-let loggingOut = false;
 
 function onMicroEvent(detail: MicroFrontendEventDetail) {
     if (detail.version !== 1 || detail.appCode !== app.value?.code) {
@@ -71,68 +67,69 @@ function onMicroEvent(detail: MicroFrontendEventDetail) {
         return;
     }
     if (detail.type === "app.logout") {
-        void handleSubappLogout();
+        void userStore.logout("microfrontend");
         return;
     }
-    if (detail.type === "app.session.expired") {
-        handleMicroSessionExpired();
+    if (
+        detail.type === "app.session.expired" ||
+        detail.type === "app.auth.failed"
+    ) {
+        void userStore.refresh().catch(() => undefined);
     }
 }
 
-async function handleSubappLogout() {
-    if (loggingOut) {
-        return;
-    }
-    loggingOut = true;
-    try {
-        await logoutApi({ silent: true });
-    } catch {
-    }
-    permissionStore.reset();
-    clearDraftsForUser(userStore.user?.id);
-    userStore.logout();
-    await router.replace("/login");
+function isCurrent(
+    sequence: number,
+    appCode: string,
+    basePath: string,
+) {
+    return (
+        !disposed &&
+        sequence === routeSequence &&
+        route.meta.appCode === appCode &&
+        route.meta.basePath === basePath
+    );
 }
 
-function handleMicroSessionExpired() {
-    if (activeCode) {
-        emitMicroFrontendEvent("host.session.expired", {
-            appCode: activeCode,
-            path: route.path,
-        });
+function assertCurrent(sequence: number, appCode: string, basePath: string) {
+    if (!isCurrent(sequence, appCode, basePath)) {
+        throw new Error("STALE_MICRO_FRONTEND_LOAD");
     }
-    handleSessionExpired("expired");
 }
 
 async function cleanupCurrentMicro() {
     const cleanup = cleanupMicro;
+    const code = activeCode;
+    const path = activePath;
     cleanupMicro = null;
-    if (cleanup) {
+    activeCode = "";
+    activePath = "";
+    if (!cleanup) {
+        return;
+    }
+    try {
         await cleanup();
-        if (activeCode) {
+    } finally {
+        if (code) {
             emitMicroFrontendEvent("host.app.left", {
-                appCode: activeCode,
-                path: route.path,
+                appCode: code,
+                path,
             });
         }
     }
-    activeCode = "";
 }
 
-async function enter() {
-    const current = app.value;
-    if (!current) {
-        return;
-    }
+async function enter(current: AppInfo, sequence: number) {
     error.value = "";
     loading.value = true;
     try {
         await cleanupCurrentMicro();
         await nextTick();
+        assertCurrent(sequence, current.code, current.basePath);
         if (!microContainer.value) {
             throw new Error("微前端挂载容器未就绪");
         }
-        const cleanup = await registerMicroApplication({
+        const cleanup = await mountMicroApplication({
             name: `workspace:${current.code}`,
             path: current.basePath,
             entry: current.moduleEntry,
@@ -140,64 +137,77 @@ async function enter() {
             appCode: current.code,
             theme: appStore.isDark ? "dark" : "light",
             locale: appStore.locale,
-            user: {
-                username: userStore.user?.username ?? "",
-                realName: userStore.user?.realName,
-            },
-            getWorkspaceToken: () => userStore.token,
-            navigate: (path) => {
-                void router.push(path);
-            },
-            onSessionExpired: handleMicroSessionExpired,
+            user: authBridge.getUser(),
+            authBridge: createScopedAuthBridge(current.code),
             domElement: microContainer.value,
-            onError: (message) => {
-                if (!disposed) {
-                    error.value = message;
-                    emitMicroFrontendEvent("host.app.error", {
-                        appCode: current.code,
-                        path: current.basePath,
-                        message,
-                    });
-                }
-            },
         });
-        if (disposed) {
+        if (!isCurrent(sequence, current.code, current.basePath)) {
             await cleanup();
             return;
         }
         cleanupMicro = cleanup;
         activeCode = current.code;
+        activePath = current.basePath;
         emitMicroFrontendEvent("host.app.entered", {
             appCode: current.code,
             path: current.basePath,
         });
-    } catch (e) {
-        error.value =
-            e instanceof Error ? e.message : "进入应用失败，请稍后重试";
+    } catch (cause) {
+        if (isCurrent(sequence, current.code, current.basePath)) {
+            error.value =
+                cause instanceof Error
+                    ? cause.message
+                    : "进入应用失败，请稍后重试";
+            emitMicroFrontendEvent("host.app.error", {
+                appCode: current.code,
+                path: current.basePath,
+                message: error.value,
+            });
+        }
     } finally {
-        loading.value = false;
+        if (sequence === routeSequence) {
+            loading.value = false;
+        }
     }
 }
 
 async function load() {
+    const sequence = ++routeSequence;
+    const appCode = route.meta.appCode;
+    const basePath = route.meta.basePath;
     loading.value = true;
+    error.value = "";
     try {
         await cleanupCurrentMicro();
-        const basePath = route.meta.basePath;
+        if (typeof appCode !== "string" || !appCode) {
+            throw new Error("应用路由缺少 appCode");
+        }
         if (typeof basePath !== "string" || !basePath) {
             throw new Error("应用路由缺少 basePath");
         }
-        app.value = await getAppRuntime(basePath);
-        appStore.setActiveApp(app.value.name);
-        await nextTick();
-        if (app.value) {
-            await enter();
+        const current = await getAppRuntime(basePath);
+        assertCurrent(sequence, appCode, basePath);
+        if (current.code !== appCode || current.basePath !== basePath) {
+            throw new Error("应用 runtime 与菜单路由配置不一致");
         }
-    } catch (e) {
-        app.value = null;
-        error.value = e instanceof Error ? e.message : "应用配置加载失败";
+        app.value = current;
+        appStore.setActiveApp(current.name);
+        await nextTick();
+        await enter(current, sequence);
+    } catch (cause) {
+        if (
+            sequence === routeSequence &&
+            !disposed &&
+            !(cause instanceof Error && cause.message === "STALE_SESSION")
+        ) {
+            app.value = null;
+            error.value =
+                cause instanceof Error ? cause.message : "应用配置加载失败";
+        }
     } finally {
-        loading.value = false;
+        if (sequence === routeSequence) {
+            loading.value = false;
+        }
     }
 }
 
@@ -214,12 +224,13 @@ onMounted(() => {
     offMicroEvent = onMicroFrontendEvent(onMicroEvent);
     void load();
 });
-onUnmounted(async () => {
+onUnmounted(() => {
     disposed = true;
+    routeSequence += 1;
     appStore.clearActiveApp();
     offMicroEvent?.();
     offMicroEvent = null;
-    await cleanupCurrentMicro();
+    void cleanupCurrentMicro().catch(() => undefined);
 });
 </script>
 

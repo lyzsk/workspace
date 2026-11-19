@@ -13,6 +13,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysRoleQuery extends BaseQuery {
 
+    private String appCode = "workspace";
+
     private String roleCode;
 
     private String roleName;

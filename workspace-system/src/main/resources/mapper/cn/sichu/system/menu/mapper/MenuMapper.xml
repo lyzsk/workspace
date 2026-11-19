@@ -10,7 +10,9 @@
         JOIN sys_role_menu rm ON rm.menu_id = m.id AND rm.is_deleted = 0
         JOIN sys_user_role ur ON ur.role_id = rm.role_id AND ur.is_deleted = 0
         JOIN sys_role r ON r.id = rm.role_id AND r.is_deleted = 0 AND r.status = 1
+        JOIN sys_app a ON a.id = r.app_id AND a.code = 'workspace' AND a.is_deleted = 0
         WHERE ur.user_id = #{userId}
+          AND m.app_code = 'workspace'
           AND m.is_deleted = 0
           AND m.status = 1
           AND m.menu_type IN ('DIR', 'MENU')

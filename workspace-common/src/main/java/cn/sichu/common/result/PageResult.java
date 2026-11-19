@@ -25,7 +25,8 @@ public class PageResult<T> implements Serializable {
 
     private long pageSize;
 
-    public static <T> PageResult<T> of(List<T> records, long total, long pageNum, long pageSize) {
+    public static <T> PageResult<T> of(List<T> records, long total,
+        long pageNum, long pageSize) {
         PageResult<T> result = new PageResult<>();
         result.setRecords(records);
         result.setTotal(total);

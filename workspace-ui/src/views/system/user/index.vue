@@ -60,11 +60,21 @@
                 :data="rows"
                
                 @selection-change="onSelectionChange"
+                @expand-change="onExpandChange"
                 @sort-change="onSortChange"
             
                 :stripe="stripe"
                 :border="border"
                 :class="[`table-size-${size}`, { 'no-header-bg': !headerBackground }]">
+            <el-table-column v-if="userStore.hasPerm('sys:user:app-grant')" type="expand" width="36">
+                <template #default="{ row }">
+                    <AppGrantPanel
+                        v-if="expandedUserIds.includes(row.id)"
+                        :user-id="row.id"
+                        :dept-options="deptOptions"
+                    />
+                </template>
+            </el-table-column>
             <el-table-column
                 type="selection"
                 width="44"
@@ -160,7 +170,7 @@
                         placeholder="请选择部门"
                     />
                 </el-form-item>
-                <el-form-item label="角色">
+                <el-form-item v-permission="'sys:user:assign'" label="角色">
                     <el-select
                         v-model="form.roleIds"
                         multiple
@@ -218,6 +228,7 @@ import {
 import { getMe } from "@/api/auth";
 import { useUserStore } from "@/store/modules/user";
 import ButtonTable from "@/components/core/tables/button-table/index.vue";
+import AppGrantPanel from "./components/AppGrantPanel.vue";
 import SearchCard from "@/components/core/tables/search-card/index.vue";
 import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
@@ -234,6 +245,7 @@ const userStore = useUserStore();
 const loading = ref(false);
 const saving = ref(false);
 const rows = ref<UserRow[]>([]);
+const expandedUserIds = ref<string[]>([]);
 const total = ref(0);
 const selectedRows = ref<UserRow[]>([]);
 const selectedIds = computed(() => selectedRows.value.map((row) => row.id));
@@ -405,6 +417,10 @@ async function remove(row: UserRow) {
 
 function onSelectionChange(selection: UserRow[]) {
     selectedRows.value = selection;
+}
+
+function onExpandChange(_row: UserRow, expandedRows: UserRow[]) {
+    expandedUserIds.value = expandedRows.map(item => item.id);
 }
 
 async function batchRemove() {
