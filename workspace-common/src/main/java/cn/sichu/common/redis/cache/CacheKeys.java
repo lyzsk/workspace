@@ -25,4 +25,8 @@ public final class CacheKeys {
     public static String authorizationPattern(String appCode) {
         return "authz:*:" + appCode;
     }
+
+    public static String apiRequestHour(String hour) {
+        return "metrics:api:hour:" + hour;
+    }
 }

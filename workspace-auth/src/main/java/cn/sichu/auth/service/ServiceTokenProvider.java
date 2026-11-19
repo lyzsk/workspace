@@ -13,7 +13,8 @@ public class ServiceTokenProvider {
 
     private final String serviceToken;
 
-    public ServiceTokenProvider(@Value("${workspace.internal.service-token:}") String serviceToken) {
+    public ServiceTokenProvider(
+        @Value("${workspace.internal.service-token:}") String serviceToken) {
         this.serviceToken = serviceToken;
     }
 

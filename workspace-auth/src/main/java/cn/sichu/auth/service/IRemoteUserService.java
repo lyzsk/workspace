@@ -6,11 +6,7 @@ import cn.sichu.auth.model.form.PasswordForm;
 import cn.sichu.auth.model.form.ProfileForm;
 import cn.sichu.auth.model.vo.UserInfoVO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 /**
  *
@@ -24,17 +20,19 @@ public interface IRemoteUserService {
     LoginCredentialsDTO getLoginInfo(@PathVariable("username") String username,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);
 
+    @GetMapping("/api/internal/users/{userId}/login-info")
+    LoginCredentialsDTO getLoginInfoById(@PathVariable("userId") Long userId,
+        @RequestHeader("X-Workspace-Service-Token") String serviceToken);
+
     @GetMapping("/api/internal/users/{userId}/org")
     UserOrgDTO getUserOrg(@PathVariable("userId") Long userId,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);
 
     @PutMapping("/api/internal/users/{userId}/profile")
-    UserInfoVO updateProfile(@PathVariable("userId") Long userId,
-        @RequestBody ProfileForm form,
+    UserInfoVO updateProfile(@PathVariable("userId") Long userId, @RequestBody ProfileForm form,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);
 
     @PutMapping("/api/internal/users/{userId}/password")
-    void changePassword(@PathVariable("userId") Long userId,
-        @RequestBody PasswordForm form,
+    void changePassword(@PathVariable("userId") Long userId, @RequestBody PasswordForm form,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);
 }

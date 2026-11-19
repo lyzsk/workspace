@@ -43,8 +43,8 @@ public class LoginSessionStore {
     public Optional<LoginSession> find(String sessionId) {
         try {
             String json = redisTemplate.opsForValue().get(CacheKeys.loginUser(sessionId));
-            return json == null ? Optional.empty()
-                : Optional.of(objectMapper.readValue(json, LoginSession.class));
+            return json == null ? Optional.empty() :
+                Optional.of(objectMapper.readValue(json, LoginSession.class));
         } catch (Exception exception) {
             throw new CacheAccessException("读取登录会话失败", exception);
         }
@@ -56,9 +56,9 @@ public class LoginSessionStore {
     }
 
     public void recordActivity(String sessionId, LocalDateTime time) {
-        find(sessionId).ifPresent(session -> save(new LoginSession(sessionId,
-            session.loginUser(), session.loginTime(), time, session.expiresAt(),
-            session.revoked(), session.revokedAt())));
+        find(sessionId).ifPresent(session -> save(
+            new LoginSession(sessionId, session.loginUser(), session.loginTime(), time,
+                session.expiresAt(), session.revoked(), session.revokedAt())));
     }
 
     public void delete(String sessionId) {
@@ -67,20 +67,20 @@ public class LoginSessionStore {
 
     public List<LoginSession> listAll() {
         List<LoginSession> sessions = new ArrayList<>();
-        try (var cursor = redisTemplate.scan(ScanOptions.scanOptions()
-            .match(CacheKeys.loginUserPattern()).count(100).build())) {
-            cursor.forEachRemaining(key -> find(key.substring("login:user:".length()))
-                .ifPresent(sessions::add));
+        try (var cursor = redisTemplate.scan(
+            ScanOptions.scanOptions().match(CacheKeys.loginUserPattern()).count(100).build())) {
+            cursor.forEachRemaining(
+                key -> find(key.substring("login:user:".length())).ifPresent(sessions::add));
         }
         return sessions;
     }
 
     public List<String> deleteByUserId(Long userId) {
         List<String> deleted = new ArrayList<>();
-        try (var cursor = redisTemplate.scan(ScanOptions.scanOptions()
-            .match(CacheKeys.loginUserPattern()).count(100).build())) {
-            cursor.forEachRemaining(key -> find(key.substring("login:user:".length()))
-                .ifPresent(session -> {
+        try (var cursor = redisTemplate.scan(
+            ScanOptions.scanOptions().match(CacheKeys.loginUserPattern()).count(100).build())) {
+            cursor.forEachRemaining(
+                key -> find(key.substring("login:user:".length())).ifPresent(session -> {
                     if (session.loginUser().getUserId().equals(userId)) {
                         delete(session.sessionId());
                         deleted.add(session.sessionId());

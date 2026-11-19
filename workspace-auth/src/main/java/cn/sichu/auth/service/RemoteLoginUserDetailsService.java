@@ -22,8 +22,8 @@ public class RemoteLoginUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        LoginCredentialsDTO credentials = remoteUserService.getLoginInfo(username,
-            tokenProvider.serviceToken());
+        LoginCredentialsDTO credentials =
+            remoteUserService.getLoginInfo(username, tokenProvider.serviceToken());
         if (credentials == null) {
             throw new UsernameNotFoundException("用户不存在");
         }
@@ -31,8 +31,8 @@ public class RemoteLoginUserDetailsService implements UserDetailsService {
     }
 
     public LoginUser loadUserById(Long userId) {
-        LoginCredentialsDTO credentials = remoteUserService.getLoginInfo(String.valueOf(userId),
-            tokenProvider.serviceToken());
+        LoginCredentialsDTO credentials =
+            remoteUserService.getLoginInfoById(userId, tokenProvider.serviceToken());
         if (credentials == null) {
             throw new UsernameNotFoundException("用户不存在");
         }

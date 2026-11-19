@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface IRemoteLoginLogService {
 
     @PostMapping("/api/internal/users/login-log")
-    void record(@RequestParam("username") String username,
-        @RequestParam("success") boolean success,
+    void record(@RequestParam("username") String username, @RequestParam("success") boolean success,
         @RequestParam("message") String message,
         @RequestParam(value = "userId", required = false) Long userId,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);

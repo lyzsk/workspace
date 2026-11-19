@@ -21,8 +21,7 @@ public class IdConfig {
     }
 
     @Bean
-    public IdentifierGenerator identifierGenerator(
-        SnowflakeIdGenerator generator) {
+    public IdentifierGenerator identifierGenerator(SnowflakeIdGenerator generator) {
         return entity -> generator.nextId();
     }
 }

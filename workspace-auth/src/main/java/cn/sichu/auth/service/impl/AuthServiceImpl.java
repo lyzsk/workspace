@@ -7,11 +7,7 @@ import cn.sichu.auth.model.form.ProfileForm;
 import cn.sichu.auth.model.vo.LoginAuthentication;
 import cn.sichu.auth.model.vo.LoginVO;
 import cn.sichu.auth.model.vo.UserInfoVO;
-import cn.sichu.auth.service.IAuthService;
-import cn.sichu.auth.service.IRemoteLoginLogService;
-import cn.sichu.auth.service.IRemoteUserService;
-import cn.sichu.auth.service.RemoteLoginUserDetailsService;
-import cn.sichu.auth.service.ServiceTokenProvider;
+import cn.sichu.auth.service.*;
 import cn.sichu.auth.session.SessionProperties;
 import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.common.core.result.ResultCode;
@@ -55,8 +51,8 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public LoginAuthentication login(LoginForm form) {
         try {
-            LoginUser user = (LoginUser) authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(form.username(), form.password()))
+            LoginUser user = (LoginUser)authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(form.username(), form.password()))
                 .getPrincipal();
             loginLogService.resetLoginFailure(user.getUserId(), tokenProvider.serviceToken());
             loginLogService.record(user.getUsername(), true, "登录成功", user.getUserId(),
@@ -71,10 +67,10 @@ public class AuthServiceImpl implements IAuthService {
                 tokenProvider.serviceToken());
             throw new BusinessException(ResultCode.FORBIDDEN, "账号已停用");
         } catch (AuthenticationException e) {
-            int failures = loginLogService.increaseLoginFailure(form.username(),
-                tokenProvider.serviceToken());
-            String message = failures >= MAX_FAIL_COUNT
-                ? "密码错误次数过多，账号已锁定 15 分钟" : "用户名或密码错误";
+            int failures =
+                loginLogService.increaseLoginFailure(form.username(), tokenProvider.serviceToken());
+            String message = failures >= MAX_FAIL_COUNT ? "密码错误次数过多，账号已锁定 15 分钟" :
+                "用户名或密码错误";
             loginLogService.record(form.username(), false, message, null,
                 tokenProvider.serviceToken());
             throw new BusinessException(ResultCode.UNAUTHORIZED, message);
@@ -91,9 +87,9 @@ public class AuthServiceImpl implements IAuthService {
             .orElseThrow(() -> new TokenException("登录会话不存在或已过期"));
         LocalDateTime now = LocalDateTime.now();
         LoginUser user = session.loginUser();
-        if (session.revoked() || now.isAfter(session.expiresAt())
-            || now.isAfter(session.lastSeenAt().plus(sessionProperties.getIdleTimeout()))
-            || !user.isEnabled() || !user.isAccountNonLocked()) {
+        if (session.revoked() || now.isAfter(session.expiresAt()) || now.isAfter(
+            session.lastSeenAt().plus(sessionProperties.getIdleTimeout())) || !user.isEnabled()
+            || !user.isAccountNonLocked()) {
             sessionStore.delete(sessionId);
             throw new TokenException("登录会话无效或已过期");
         }
@@ -156,8 +152,8 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     private UserInfoVO toUserInfo(LoginUser user) {
-        UserOrgDTO org = remoteUserService.getUserOrg(user.getUserId(),
-            tokenProvider.serviceToken());
+        UserOrgDTO org =
+            remoteUserService.getUserOrg(user.getUserId(), tokenProvider.serviceToken());
         return UserInfoVO.from(user, org == null ? null : org.tenantName(),
             org == null ? null : org.deptName());
     }

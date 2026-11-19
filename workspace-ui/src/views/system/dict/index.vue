@@ -70,7 +70,7 @@
                         ]"
                         highlight-current-row
                     >
-                        <el-table-column prop="id" label="字典编号" width="90" />
+                        <el-table-column type="index" label="序号" width="70" />
                         <el-table-column prop="dictName" label="字典名称" min-width="110" />
                         <el-table-column prop="dictType" label="字典类型" min-width="150">
                             <template #default="{ row }">
@@ -147,7 +147,12 @@
                             { 'no-header-bg': !headerBackground },
                         ]"
                     >
-                        <el-table-column prop="id" label="字典编号" width="90" />
+                        <el-table-column
+                            type="index"
+                            :index="dataRowIndex"
+                            label="序号"
+                            width="70"
+                        />
                         <el-table-column prop="label" label="显示文本" min-width="120" />
                         <el-table-column prop="value" label="字典值" min-width="100" />
                         <el-table-column prop="sortNo" label="排序" width="70" />
@@ -452,6 +457,10 @@ async function removeType(row: DictTypeRow) {
         selectedType.value = null;
     }
     loadTypes();
+}
+
+function dataRowIndex(index: number) {
+    return (dataQuery.pageNum - 1) * dataQuery.pageSize + index + 1;
 }
 
 function openDataCreate() {

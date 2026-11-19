@@ -38,20 +38,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
             .cors(org.springframework.security.config.Customizer.withDefaults())
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .logout(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(
-                SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout",
-                    "/actuator/health", "/error").permitAll()
-                .anyRequest().authenticated())
-            .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) ->
-                    writeError(response, 401, "未登录或登录已过期"))
-                .accessDeniedHandler((request, response, accessDeniedException) ->
-                    writeError(response, 403, "没有权限")))
+            .formLogin(AbstractHttpConfigurer::disable).httpBasic(AbstractHttpConfigurer::disable)
+            .logout(AbstractHttpConfigurer::disable).sessionManagement(
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                authorize -> authorize.requestMatchers("/api/auth/login", "/api/auth/refresh",
+                        "/api/auth/logout", "/actuator/health", "/error").permitAll().anyRequest()
+                    .authenticated()).exceptionHandling(
+                exception -> exception.authenticationEntryPoint(
+                    (request, response, authException) -> writeError(response, 401,
+                        "未登录或登录已过期")).accessDeniedHandler(
+                    (request, response, accessDeniedException) -> writeError(response, 403,
+                        "没有权限")))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -77,8 +75,8 @@ public class SecurityConfig {
         response.setStatus(status);
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
-        response.getWriter().write("{\"code\":" + status + ",\"msg\":\"" + message
-            + "\",\"data\":null}");
+        response.getWriter()
+            .write("{\"code\":" + status + ",\"msg\":\"" + message + "\",\"data\":null}");
     }
 
     @Bean

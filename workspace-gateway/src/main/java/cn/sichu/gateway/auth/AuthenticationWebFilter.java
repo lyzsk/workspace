@@ -30,6 +30,8 @@ public class AuthenticationWebFilter implements WebFilter {
     public static final String TOKEN_VERSION_HEADER = "X-Workspace-Token-Version";
     private static final List<String> PUBLIC_PATHS = List.of(
         "/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/actuator/health", "/error");
+    private static final List<String> PUBLIC_API_DOC_PREFIXES = List.of(
+        "/doc.html", "/v3/api-docs", "/webjars/", "/swagger-ui", "/swagger-resources/");
     private static final List<String> IDENTITY_HEADERS = List.of(GATEWAY_TOKEN_HEADER,
         USER_ID_HEADER, USERNAME_HEADER, TENANT_ID_HEADER, SESSION_ID_HEADER, TOKEN_VERSION_HEADER);
 
@@ -49,7 +51,7 @@ public class AuthenticationWebFilter implements WebFilter {
         String path = exchange.getRequest().getPath().value();
         ServerWebExchange cleaned = stripIdentityHeaders(exchange);
         if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod()) || isPublic(path)
-            || path.startsWith("/api/auth/")) {
+            || isApiDoc(path) || path.startsWith("/api/auth/")) {
             return chain.filter(cleaned);
         }
         if (path.startsWith("/api/internal/")) {
@@ -91,6 +93,10 @@ public class AuthenticationWebFilter implements WebFilter {
 
     private boolean isPublic(String path) {
         return PUBLIC_PATHS.contains(path) || path.startsWith("/actuator/health/");
+    }
+
+    private boolean isApiDoc(String path) {
+        return PUBLIC_API_DOC_PREFIXES.stream().anyMatch(path::startsWith);
     }
 
     private String extractToken(ServerWebExchange exchange) {

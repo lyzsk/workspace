@@ -44,11 +44,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String sessionId = tokenService.parse(header.substring(7)).sessionId();
                 LoginSession session = sessionStore.find(sessionId).orElse(null);
                 LocalDateTime now = LocalDateTime.now();
-                if (session != null && !session.revoked()
-                    && now.isBefore(session.expiresAt())
+                if (session != null && !session.revoked() && now.isBefore(session.expiresAt())
                     && now.isBefore(session.lastSeenAt().plus(sessionProperties.getIdleTimeout()))
-                    && session.loginUser().isEnabled()
-                    && session.loginUser().isAccountNonLocked()) {
+                    && session.loginUser().isEnabled() && session.loginUser()
+                    .isAccountNonLocked()) {
                     sessionStore.recordActivity(sessionId, now);
                     LoginUser loginUser = session.loginUser();
                     UsernamePasswordAuthenticationToken authentication =

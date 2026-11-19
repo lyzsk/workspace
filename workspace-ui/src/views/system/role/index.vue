@@ -552,39 +552,10 @@ function syncMenuIds() {
     form.menuIds = [...new Set([...checked, ...halfChecked])];
 }
 
-function onMenuCheck(node: MenuNode, state: { checkedKeys: string[] }) {
-    if (isSuperAdminRole.value) {
-        return;
-    }
-    if (form.menuCheckStrictly) {
-        syncMenuIds();
-        isSelectAll.value =
-            state.checkedKeys.length === allMenuKeys().length && allMenuKeys().length > 0;
-        return;
-    }
-    const checked = new Set(state.checkedKeys);
-    const affected = collectWithChildren(node);
-    if (checked.has(node.id)) {
-        affected.forEach((id) => checked.add(id));
-        const nodes = new Map<string, MenuNode>();
-        const register = (items: MenuNode[]) => {
-            for (const item of items) {
-                nodes.set(item.id, item);
-                register(item.children ?? []);
-            }
-        };
-        register(menuOptions.value);
-        let parentId = node.parentId;
-        while (parentId && parentId !== "0") {
-            checked.add(parentId);
-            parentId = nodes.get(parentId)?.parentId ?? "0";
-        }
-    } else {
-        affected.forEach((id) => checked.delete(id));
-    }
-    menuTreeRef.value?.setCheckedKeys([...checked], false);
+function onMenuCheck(_node: MenuNode, state: { checkedKeys: string[] }) {
     syncMenuIds();
-    isSelectAll.value = checked.size === allMenuKeys().length && checked.size > 0;
+    isSelectAll.value =
+        state.checkedKeys.length === allMenuKeys().length && allMenuKeys().length > 0;
 }
 
 function toggleExpandAll() {

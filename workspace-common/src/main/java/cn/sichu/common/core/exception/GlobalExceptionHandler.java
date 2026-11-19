@@ -23,12 +23,10 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Result<Void>> handleBusinessException(
-        BusinessException e) {
+    public ResponseEntity<Result<Void>> handleBusinessException(BusinessException e) {
         IResultCode code = e.getResultCode();
         log.warn("业务异常 code={} msg={}", code.getCode(), e.getMessage());
-        return ResponseEntity.status(code.getCode())
-            .body(Result.failed(code, e.getMessage()));
+        return ResponseEntity.status(code.getCode()).body(Result.failed(code, e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -50,8 +48,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Result<Void>> handleNoResourceFound(
-        NoResourceFoundException e) {
+    public ResponseEntity<Result<Void>> handleNoResourceFound(NoResourceFoundException e) {
         log.warn("资源不存在: {}", e.getResourcePath());
         return ResponseEntity.status(ResultCode.NOT_FOUND.getCode())
             .body(Result.failed(ResultCode.NOT_FOUND));
@@ -60,7 +57,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception e) {
         log.error("系统异常", e);
-        return ResponseEntity.status(ResultCode.FAILED.getCode())
-            .body(Result.failed());
+        return ResponseEntity.status(ResultCode.FAILED.getCode()).body(Result.failed());
     }
 }

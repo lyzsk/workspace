@@ -18,6 +18,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "login" },
     },
     {
+        path: "/devtools-blocked",
+        name: "DevtoolsBlocked",
+        component: () => import("@/views/exception/devtools/index.vue"),
+        meta: { title: "页面访问受限" },
+    },
+    {
         path: "/",
         name: "Layout",
         component: () => import("@/views/index/index.vue"),
@@ -28,6 +34,12 @@ const routes: RouteRecordRaw[] = [
                 name: "Dashboard",
                 component: () => import("@/views/dashboard/index.vue"),
                 meta: { title: "menu.dashboard" },
+            },
+            {
+                path: "dashboard/analysis",
+                name: "DashboardAnalysis",
+                component: () => import("@/views/dashboard/analysis/index.vue"),
+                meta: { title: "分析页" },
             },
             {
                 path: "403",

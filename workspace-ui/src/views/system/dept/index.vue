@@ -16,6 +16,7 @@
                     v-loading="loading"
                     :data="depts"
                     row-key="id"
+                    default-expand-all
                     :tree-props="{ children: 'children' }"
                     :stripe="stripe"
                     :border="border"

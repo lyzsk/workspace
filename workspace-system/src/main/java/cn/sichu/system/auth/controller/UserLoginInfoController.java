@@ -46,6 +46,13 @@ public class UserLoginInfoController {
                 userDetailsService.loadUserByUsername(username));
     }
 
+    @GetMapping("/{userId}/login-info")
+    public LoginCredentialsVO loginInfoById(@PathVariable Long userId,
+        @RequestHeader("X-Workspace-Service-Token") String serviceToken) {
+        tokenValidator.validate(serviceToken);
+        return LoginCredentialsVO.from(userDetailsService.loadUserById(userId));
+    }
+
     @GetMapping("/{userId}/org")
     public UserOrgVO organization(@PathVariable Long userId,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken) {

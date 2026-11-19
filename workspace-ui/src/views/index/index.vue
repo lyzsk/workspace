@@ -22,16 +22,20 @@
                     :collapse="sidebarCollapsed"
                     :collapse-transition="false"
                 >
-                    <el-menu-item index="/dashboard">
-                        <div class="menu-icon flex-cc">
-                            <SvgIcon icon="ri:home-2-line" />
-                        </div>
+                    <el-sub-menu index="dashboard-menu">
                         <template #title>
-                            <span class="menu-name">{{
-                                t("menu.dashboard")
-                            }}</span>
+                            <div class="menu-icon flex-cc">
+                                <SvgIcon icon="ri:home-2-line" />
+                            </div>
+                            <span class="menu-name">{{ t("menu.dashboard") }}</span>
                         </template>
-                    </el-menu-item>
+                        <el-menu-item index="/dashboard">
+                            <template #title><span class="menu-name">工作台</span></template>
+                        </el-menu-item>
+                        <el-menu-item index="/dashboard/analysis">
+                            <template #title><span class="menu-name">分析页</span></template>
+                        </el-menu-item>
+                    </el-sub-menu>
                     <SidebarMenu :menus="permissionStore.menus" />
                 </el-menu>
                 <el-menu

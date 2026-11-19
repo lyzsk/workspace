@@ -388,7 +388,7 @@ export const useUserStore = defineStore(
     {
         persist: {
             key: "workspace-user",
-            storage: sessionStorage,
+            storage: typeof window === "undefined" ? undefined : window.sessionStorage,
             pick: ["token", "user"],
         },
     },

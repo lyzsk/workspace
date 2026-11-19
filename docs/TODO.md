@@ -10,7 +10,21 @@
 - [ ] 启动 Nacos/Redis/PostgreSQL，联调 system → auth → gateway → UI 全链路
 - [ ] 真实 Redis 会话过期、空闲退出、改密撤销、强退验证
 - [ ] V5 的 sys_refresh_token 表保留但已不再使用，决定是否后续迁移清理
+- [ ] 验收 V7__normalize_menu_sort.sql：按 app_code+parent_id 保持现有相对顺序并重排为 1、2、3…；打包已通过，待用户重启 system 执行 Flyway 后核对页面与 flyway_schema_history
 - [ ] 统一 auth/system 两份 Feign DTO 的字段校验（当前靠 JSON 字段名一致）
+- [ ] 修复权限变更后旧会话鉴权：refresh 查到 fresh LoginUser 后未回写 Redis，getMe 与 system 仍读旧权限；先补“旧会话无权限→授权→刷新→放行”测试再改
+- [ ] 联调任意子应用跨应用免密：所有子应用跨应用入口统一调用 authBridge.navigate 进入目标应用的 workspace basePath，不得跳转目标应用独立地址/登录页；宿主已注入 token 与通用 navigate；源码修改交接见 `docs/handoff/2026-11-19-cross-application-navigation.md`
+- [x] 本机联调前置：Nacos 重复空 token.secret.key 已删除；Nacos 启动成功，23:07 日志确认 workspace-auth/workspace-gateway/workspace-system 均已新增注册；Redis 可执行文件与 redis.conf 已验证
+- [x] 修复 refresh 主链路：新增 GET /api/internal/users/{userId}/login-info，auth loadUserById 改走专用接口，不再把数字 ID 当 username；auth/system 两端回归测试各 1 个通过，待用户重启 system/auth 后做真实 refresh 验收
+- [ ] 修复应用授权查询路由：/api/auth/me/apps/** 在 system 实现但被 Gateway /api/auth/** 全量送到 auth；调整归属或精确路由并补测试
+- [ ] 恢复 SUPER_ADMIN 只旁路 workspace 的既定边界：当前 computeAuthorization/listAccessibleApps 对全部业务应用绕过用户授权和角色要求
+- [ ] 平台用户角色变更同步失效 authz:<userId>:workspace：UserServiceImpl.update/saveRoles 当前未清授权缓存，且登录会话仍是旧权限
+
+## 工作台与访问分析（2026-11-20）
+
+- [ ] 重启 Gateway 与 system 执行 REST 计数改造及 V8__app_access_analytics.sql，验收真实事件采集；工作台=四卡片/周同比/近 7 日 REST 点击量/用户部门分布/热门应用，分析页=应用访问数/近 7 日 PV-UV/TOP 用户；历史无事件时应为 0，不使用演示数据
+- [ ] 验收非 admin/SUPER_ADMIN 开发者工具守卫：F12、Ctrl+Shift+I/J/C、自动检测后按 /devtools-blocked→/dashboard（未登录→/login）使用 replace 自动返回，右键仍可用；管理员不受限制
+- [ ] 验收全局多行水印 Workspace - realName（缺省 username）/ 动态本地时间 yyyy-MM-dd HH:mm:ss：登录、受限、异常和结果页不显示，其余已登录页面每秒更新时间且不阻挡点击
 
 ## 微前端与云原生改造（2026-11-19）
 
@@ -23,6 +37,10 @@
 - [ ] 将历史 single-spa ESM 入口迁移为 qiankun HTML entry；未迁移前不算现有子应用已接入
 - [ ] 为现有应用配置 workspace 管理的应用角色与菜单；无有效角色时新规则不允许进入
 - [ ] 集群上线前完成 Quartz JDBC Cluster、Redis WebSocket 广播、共享文件存储和唯一雪花 workerId
+- [ ] 生产部署前启用并验收 Nacos 配置中心：规划 shared/system/auth/gateway Data ID 与环境 namespace/group；非敏感共享配置由控制台或 API 发布，密钥仍走环境变量/密钥管理；验证动态刷新、缺失配置和 Nacos 不可用时的启动行为
+- [ ] 生产部署前建设链路追踪：评估并接入 SkyWalking 或同类 APM，打通 Gateway→auth→system 与 Feign 的 TraceId/Span、服务拓扑、耗时和异常分析；保留 RequestId 日志关联并验收跨服务透传
+- [ ] 生产部署前评估 Sentinel：在现有限流之外，按真实故障场景决定是否引入熔断、慢调用保护、降级和热点限流；不为凑技术栈直接引入
+- [ ] 生产部署前评估 Seata：先列出必须跨服务同时成功/失败的事务场景，比较本地事务+幂等/补偿/可靠事件与 AT/TCC/Saga；Redis 等不被全局事务覆盖的资源单独设计补偿，不默认引入
 
 ## 本轮（2026-11-17）
 
@@ -30,7 +48,7 @@
 - [x] 活通道改名（2026-11-17）：EAP 路由 `/auth/ticket` → `/auth/workspace`，组件 `WorkspaceLogin`，目录 `views/auth/workspace/`，页面文案"正在登录…"；`micro.ts` 同步
 - [ ] `eap-tool-service:access` 口径写文档：平台宿主入口权限 vs EAP 本地用户闸；已验证 EAP `loginKnownUser` 拒绝已停用用户（`AuthController.java:115-118`），口径 1 成立，剩落笔
 - [ ] 生产 moduleEntry 改造：`build:micro` 已验证通过，构建/托管/SQL/preview 联调步骤见 `docs/deploy-microfrontend.md`；剩 preview 联调验收（需手动起 preview 与 workspace-ui）
-- [ ] 浏览器人工验收：角色树、草稿恢复、权限即时刷新、在线时间、子应用连续进入/离开
+- [ ] 浏览器人工验收：角色父子联动开关、用户展开应用授权树表的宽度与配置、部门默认全展开、字典分页序号、/api-doc（需重启 Gateway）、草稿恢复、权限即时刷新、在线时间、子应用连续进入/离开
 
 ## 后续
 

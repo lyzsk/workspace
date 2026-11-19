@@ -451,3 +451,9 @@ onMounted(async () => {
     roleOptions.value = await listRoles();
 });
 </script>
+
+<style scoped>
+:deep(.el-table__expanded-cell) {
+    padding: 0 !important;
+}
+</style>

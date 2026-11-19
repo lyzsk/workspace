@@ -1,25 +1,68 @@
 <template>
     <div v-loading="loading" class="app-grant-panel">
-        <div v-for="grant in grants" :key="grant.appCode" class="app-grant-row">
-            <div class="app-grant-name">
-                <strong>{{ grant.appName }}</strong>
-                <span>{{ grant.appCode }}</span>
-            </div>
-            <el-tag :type="grant.effective ? 'success' : 'info'">
-                {{ grant.appStatus !== 1 ? "应用已停用" : !grant.roleIds.length ? "未分配角色" : grant.effective ? "已启用" : "已停用" }}
-            </el-tag>
-            <div class="app-grant-value" :title="grant.roleNames.join('、')">
-                角色：{{ grant.roleNames.length ? grant.roleNames.join("、") : "未分配" }}
-            </div>
-            <div class="app-grant-value">数据权限：{{ scopeLabel(grant.dataScope) }}</div>
-            <el-button
-                v-permission="'sys:user:app-grant'"
-                size="small"
-                @click="openConfig(grant)"
-            >
-                配置
-            </el-button>
-        </div>
+        <Table
+            v-if="grants.length"
+            :data="grantTable"
+            row-key="id"
+            :tree-props="{ children: 'children' }"
+            :stripe="false"
+            size="small"
+            class="app-grant-table"
+        >
+            <el-table-column label="应用" min-width="150" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <strong v-if="row.kind === 'application'" class="app-grant-name">
+                        {{ row.label }}
+                    </strong>
+                </template>
+            </el-table-column>
+            <el-table-column label="授权项" width="100">
+                <template #default="{ row }">
+                    <span v-if="row.kind === 'detail'" class="app-grant-detail">
+                        {{ row.label }}
+                    </span>
+                </template>
+            </el-table-column>
+            <el-table-column label="编码" min-width="150" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <span v-if="row.kind === 'application'" class="app-grant-code">
+                        {{ row.value }}
+                    </span>
+                </template>
+            </el-table-column>
+            <el-table-column label="授权内容" min-width="160" show-overflow-tooltip>
+                <template #default="{ row }">
+                    <span v-if="row.kind === 'detail'" class="app-grant-value">
+                        {{ row.value }}
+                    </span>
+                </template>
+            </el-table-column>
+            <el-table-column label="状态" width="90">
+                <template #default="{ row }">
+                    <el-tag
+                        v-if="row.kind === 'application'"
+                        size="small"
+                        effect="light"
+                        :type="row.grant.effective ? 'success' : 'info'"
+                    >
+                        {{ statusLabel(row.grant) }}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="90" align="center" class-name="action-cell">
+                <template #default="{ row }">
+                    <ButtonTable
+                        v-if="row.kind === 'application'"
+                        v-permission="'sys:user:app-grant'"
+                        icon="ri:settings-3-line"
+                        icon-class="bg-theme/12 text-theme"
+                        title="配置"
+                        aria-label="配置"
+                        @click="openConfig(row.grant)"
+                    />
+                </template>
+            </el-table-column>
+        </Table>
         <el-empty v-if="!loading && !grants.length" description="暂无应用" :image-size="48" />
 
         <el-dialog v-model="visible" :title="`配置 ${form.appName}`" width="560px" append-to-body>
@@ -68,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import {
     listUserAppGrants,
@@ -76,12 +119,23 @@ import {
     type UserAppGrant,
 } from "@/api/system/app-grant";
 import { listRoles } from "@/api/system/role";
+import ButtonTable from "@/components/core/tables/button-table/index.vue";
+import Table from "@/components/core/tables/table/index.vue";
 import type { DeptNode, RoleRow } from "@/types/system";
 
 const props = defineProps<{
     userId: string;
     deptOptions: DeptNode[];
 }>();
+
+interface GrantTableNode {
+    id: string;
+    kind: "application" | "detail";
+    label: string;
+    value: string;
+    grant: UserAppGrant;
+    children?: GrantTableNode[];
+}
 
 const loading = ref(false);
 const saving = ref(false);
@@ -99,6 +153,32 @@ const form = reactive({
     dataScope: 0 as number | null,
     deptIds: [] as string[],
 });
+
+const grantTable = computed<GrantTableNode[]>(() =>
+    grants.value.map((grant) => ({
+        id: grant.appCode,
+        kind: "application",
+        label: grant.appName,
+        value: grant.appCode,
+        grant,
+        children: [
+            {
+                id: `${grant.appCode}:roles`,
+                kind: "detail",
+                label: "角色",
+                value: grant.roleNames.length ? grant.roleNames.join("、") : "未分配",
+                grant,
+            },
+            {
+                id: `${grant.appCode}:scope`,
+                kind: "detail",
+                label: "数据权限",
+                value: scopeLabel(grant.dataScope) ?? "跟随角色",
+                grant,
+            },
+        ],
+    })),
+);
 
 watch(() => props.userId, load, { immediate: true });
 watch(visible, value => {
@@ -178,6 +258,16 @@ async function save() {
     }
 }
 
+function statusLabel(grant: UserAppGrant) {
+    if (grant.appStatus !== 1) {
+        return "应用已停用";
+    }
+    if (!grant.roleIds.length) {
+        return "未分配角色";
+    }
+    return grant.effective ? "已启用" : "已停用";
+}
+
 function scopeLabel(scope?: number | null) {
     return scope == null || scope === 0
         ? "跟随角色"
@@ -187,43 +277,43 @@ function scopeLabel(scope?: number | null) {
 
 <style scoped>
 .app-grant-panel {
-    padding: 8px 24px;
+    box-sizing: border-box;
+    width: calc(100% - 80px);
+    max-width: calc(100% - 80px);
+    min-width: 0;
+    margin-left: 80px;
+    padding: 4px 0 8px;
+    overflow: hidden;
 }
 
-.app-grant-row {
-    display: grid;
-    grid-template-columns: minmax(180px, 1.2fr) 90px minmax(180px, 1.5fr) 180px 72px;
-    gap: 16px;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--el-border-color-lighter);
+.app-grant-table {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.app-grant-table :deep(.art-table),
+.app-grant-table :deep(.el-table) {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .app-grant-name {
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
+    font-weight: 500;
+    color: var(--el-text-color-primary);
 }
 
-.app-grant-name span {
-    color: var(--el-text-color-secondary);
-    font-size: 12px;
-}
-
+.app-grant-code,
 .app-grant-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--el-text-color-secondary);
 }
 
-@media (max-width: 900px) {
-    .app-grant-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
+.app-grant-detail {
+    display: inline-block;
+}
 
-    .app-grant-value {
-        white-space: normal;
-    }
+.app-grant-code {
+    font-size: 12px;
 }
 </style>

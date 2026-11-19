@@ -11,13 +11,7 @@ import cn.sichu.common.core.result.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  *
@@ -74,7 +68,7 @@ public class AuthController {
     }
 
     private String bearer(String authorization) {
-        return authorization != null && authorization.startsWith("Bearer ")
-            ? authorization.substring(7) : null;
+        return authorization != null && authorization.startsWith("Bearer ") ?
+            authorization.substring(7) : null;
     }
 }

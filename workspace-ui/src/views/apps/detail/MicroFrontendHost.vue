@@ -19,6 +19,7 @@
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getAppRuntime, type AppInfo } from "@/api/system/app";
+import { recordApplicationAccess } from "@/api/system/dashboard";
 import { authBridge, createScopedAuthBridge } from "@/microfrontend/authBridge";
 import { useAppStore } from "@/store/modules/app";
 import { useUserStore } from "@/store/modules/user";
@@ -152,6 +153,7 @@ async function enter(current: AppInfo, sequence: number) {
             appCode: current.code,
             path: current.basePath,
         });
+        void recordApplicationAccess(current.code).catch(() => undefined);
     } catch (cause) {
         if (isCurrent(sequence, current.code, current.basePath)) {
             error.value =

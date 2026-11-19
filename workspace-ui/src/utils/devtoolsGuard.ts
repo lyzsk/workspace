@@ -10,7 +10,8 @@ export function installDevtoolsGuard() {
 
     function isAdmin() {
         try {
-            return useUserStore().user?.username === "admin";
+            const user = useUserStore().user;
+            return user?.username === "admin" || user?.roles?.includes("SUPER_ADMIN") === true;
         } catch {
             return false;
         }
@@ -21,7 +22,7 @@ export function installDevtoolsGuard() {
             return;
         }
         navigating = true;
-        const target = window.location.pathname === "/login" ? "/login" : "/dashboard";
+        const target = "/devtools-blocked";
         if (window.location.pathname === target) {
             window.location.reload();
         } else {

@@ -59,6 +59,11 @@ spring:
               order: 10
               predicates:
                 - Path=/api/auth/**
+            - id: workspace-system-api-doc
+              uri: lb://workspace-system
+              order: 90
+              predicates:
+                - Path=/doc.html,/v3/api-docs/**,/webjars/**,/swagger-ui.html,/swagger-ui/**,/swagger-resources/**
             - id: workspace-system-api
               uri: lb://workspace-system
               order: 100
