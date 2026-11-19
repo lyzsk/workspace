@@ -1,6 +1,6 @@
 package cn.sichu.quartz.handler;
 
-import cn.sichu.common.utils.TextUtils;
+import cn.sichu.common.core.utils.TextUtils;
 import cn.sichu.quartz.entity.SysJobLog;
 import cn.sichu.quartz.service.IJobLogService;
 import lombok.extern.slf4j.Slf4j;

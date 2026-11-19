@@ -20,11 +20,11 @@
     <modules>
         <module>workspace-common</module>
         <module>workspace-system</module>
+        <module>workspace-auth</module>
         <module>workspace-tool</module>
         <module>workspace-quartz</module>
         <module>workspace-generator</module>
         <module>workspace-gateway</module>
-        <module>workspace-admin</module>
     </modules>
 
     <properties>

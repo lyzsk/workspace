@@ -1,7 +1,7 @@
 package cn.sichu.system.notice.service.impl;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.system.notice.entity.SysMessage;
 import cn.sichu.system.notice.entity.SysNotice;
 import cn.sichu.system.notice.mapper.SysMessageMapper;
@@ -11,8 +11,8 @@ import cn.sichu.system.notice.model.vo.SysMessageVO;
 import cn.sichu.system.notice.service.IMessageService;
 import cn.sichu.system.notice.service.NoticeTemplateRenderer;
 import cn.sichu.system.notice.websocket.NotificationEventPublisher;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.mapper.SysUserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

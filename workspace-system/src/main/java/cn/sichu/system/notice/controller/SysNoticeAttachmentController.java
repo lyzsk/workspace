@@ -1,6 +1,6 @@
 package cn.sichu.system.notice.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.file.model.FileDownload;
 import cn.sichu.system.file.model.vo.SysFileVO;
 import cn.sichu.system.notice.service.INoticeAttachmentService;

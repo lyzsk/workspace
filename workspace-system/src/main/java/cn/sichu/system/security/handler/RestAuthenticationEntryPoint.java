@@ -1,6 +1,6 @@
 package cn.sichu.system.security.handler;
 
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.result.ResultCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

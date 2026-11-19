@@ -1,6 +1,6 @@
 package cn.sichu.system.file.storage;
 
-import cn.sichu.common.file.FileStorage;
+import cn.sichu.common.core.file.FileStorage;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

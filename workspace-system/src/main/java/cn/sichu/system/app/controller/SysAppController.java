@@ -1,10 +1,10 @@
 package cn.sichu.system.app.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.app.model.form.SysAppForm;
 import cn.sichu.system.app.model.vo.SysAppVO;
 import cn.sichu.system.app.service.ISysAppService;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.log.annotation.Log;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

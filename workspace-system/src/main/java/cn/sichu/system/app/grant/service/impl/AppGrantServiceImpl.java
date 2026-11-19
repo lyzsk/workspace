@@ -1,8 +1,8 @@
 package cn.sichu.system.app.grant.service.impl;
 
-import cn.sichu.common.event.DataChangedEvent;
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.event.DataChangedEvent;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.entity.SysUserApp;
 import cn.sichu.system.app.grant.entity.SysUserAppDept;
@@ -18,8 +18,8 @@ import cn.sichu.system.dept.entity.SysDept;
 import cn.sichu.system.dept.mapper.SysDeptMapper;
 import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.mapper.SysRoleMapper;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.entity.SysUserRole;
 import cn.sichu.system.user.mapper.SysUserMapper;
@@ -56,6 +56,7 @@ public class AppGrantServiceImpl implements IAppGrantService {
     private final SysUserRoleMapper userRoleMapper;
     private final SysDeptMapper deptMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final cn.sichu.common.redis.cache.AuthorizationStore authorizationStore;
 
     @Override
     public List<AppGrantVO> listUserGrants(Long userId) {
@@ -84,7 +85,8 @@ public class AppGrantServiceImpl implements IAppGrantService {
             grant.setAppId(app.getId());
         }
         grant.setStatus(form.getStatus());
-        grant.setDataScope(form.getDataScope());
+        grant.setDataScope(form.getDataScope() == null || form.getDataScope() == 0
+            ? null : form.getDataScope());
         if (grant.getId() == null) {
             userAppMapper.insert(grant);
         } else {
@@ -92,6 +94,7 @@ public class AppGrantServiceImpl implements IAppGrantService {
         }
         saveDepartments(grant, form.getDeptIds());
         saveRoles(user, app, form.getRoleIds());
+        authorizationStore.delete(userId, appCode);
         eventPublisher.publishEvent(new DataChangedEvent(
             "/api/system/users/" + userId + "/apps/" + appCode + "/grant",
             "PUT", LocalDateTime.now()));
@@ -205,7 +208,7 @@ public class AppGrantServiceImpl implements IAppGrantService {
             throw new BusinessException(ResultCode.PARAM_ERROR,
                 "启用应用授权前必须至少分配一个角色");
         }
-        if (form.getDataScope() != null && !Set.of(1, 2, 3, 4, 5)
+        if (form.getDataScope() != null && !Set.of(0, 1, 2, 3, 4, 5)
             .contains(form.getDataScope())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "数据范围无效");
         }

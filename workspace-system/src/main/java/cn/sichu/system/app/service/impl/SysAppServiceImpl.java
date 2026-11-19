@@ -1,7 +1,7 @@
 package cn.sichu.system.app.service.impl;
 
-import cn.sichu.common.base.BaseImpl;
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.app.grant.entity.SysUserApp;
@@ -17,8 +17,8 @@ import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.entity.SysRoleMenu;
 import cn.sichu.system.role.mapper.SysRoleMapper;
 import cn.sichu.system.role.mapper.SysRoleMenuMapper;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

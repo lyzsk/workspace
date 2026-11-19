@@ -1,8 +1,8 @@
 package cn.sichu.system.notice.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.log.annotation.Log;
 import cn.sichu.system.notice.model.form.SysNoticeForm;
 import cn.sichu.system.notice.model.form.SysNoticePublishForm;
 import cn.sichu.system.notice.model.query.SysNoticeQuery;

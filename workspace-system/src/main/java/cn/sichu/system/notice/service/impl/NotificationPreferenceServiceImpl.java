@@ -1,14 +1,14 @@
 package cn.sichu.system.notice.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.ResultCode;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.system.notice.entity.SysNotificationPreference;
 import cn.sichu.system.notice.mapper.SysNotificationPreferenceMapper;
 import cn.sichu.system.notice.model.form.SysNotificationPreferenceForm;
 import cn.sichu.system.notice.service.INotificationPreferenceService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -521,9 +521,12 @@ async function openEdit(row: RoleRow) {
             return;
         }
         menuOptions.value = menus;
-        form.menuIds = menuIds;
+        const visibleMenuIds = row.roleCode === "SUPER_ADMIN"
+            ? allMenuKeys()
+            : menuIds;
+        form.menuIds = visibleMenuIds;
         await nextTick();
-        menuTreeRef.value?.setCheckedKeys(menuIds, false);
+        menuTreeRef.value?.setCheckedKeys(visibleMenuIds, false);
     } finally {
         if (version === roleEditVersion) {
             menuLoading.value = false;

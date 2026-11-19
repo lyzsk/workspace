@@ -1,6 +1,6 @@
 package cn.sichu.system.user.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
 import cn.sichu.system.app.grant.service.IAppGrantService;
@@ -56,7 +56,8 @@ class UserServiceImplTest {
         workspace.setCode("workspace");
         when(appMapper.selectOne(any())).thenReturn(workspace);
         userService = new UserServiceImpl(passwordEncoder, authTokenStore, userRoleMapper,
-            dataScopeService, appGrantService, appMapper, roleMapper, userAppMapper);
+            dataScopeService, appGrantService, appMapper, roleMapper, userAppMapper,
+            mock(cn.sichu.system.security.mapper.AuthQueryMapper.class));
         ReflectionTestUtils.setField(userService, "baseMapper", userMapper);
         when(dataScopeService.current()).thenReturn(new DataScopeFilter(true, java.util.Set.of(), false, null));
         when(userRoleMapper.selectList(any())).thenReturn(List.of());

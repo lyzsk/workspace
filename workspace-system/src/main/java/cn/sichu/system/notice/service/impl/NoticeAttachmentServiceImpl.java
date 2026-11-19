@@ -1,7 +1,7 @@
 package cn.sichu.system.notice.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.system.file.entity.SysFile;
 import cn.sichu.system.file.model.FileDownload;
 import cn.sichu.system.file.model.vo.SysFileVO;
@@ -13,8 +13,8 @@ import cn.sichu.system.notice.mapper.SysMessageMapper;
 import cn.sichu.system.notice.mapper.SysNoticeAttachmentMapper;
 import cn.sichu.system.notice.mapper.SysNoticeMapper;
 import cn.sichu.system.notice.service.INoticeAttachmentService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;

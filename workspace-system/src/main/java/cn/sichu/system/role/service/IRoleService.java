@@ -1,6 +1,6 @@
 package cn.sichu.system.role.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.system.role.model.form.SysRoleForm;
 import cn.sichu.system.role.model.query.SysRoleQuery;
 import cn.sichu.system.role.model.vo.SysRoleVO;

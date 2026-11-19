@@ -1,6 +1,6 @@
 package cn.sichu.quartz.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.quartz.model.form.CronValidationForm;
 import cn.sichu.quartz.model.vo.CronValidationVO;
 import cn.sichu.quartz.service.CronExpressionService;

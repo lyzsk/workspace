@@ -1,14 +1,14 @@
 package cn.sichu.system.dict.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
-import cn.sichu.common.utils.CsvUtils;
-import cn.sichu.common.utils.ExcelUtils;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.utils.CsvUtils;
+import cn.sichu.common.core.utils.ExcelUtils;
 import cn.sichu.system.dict.model.form.SysDictTypeForm;
 import cn.sichu.system.dict.model.query.SysDictTypeQuery;
 import cn.sichu.system.dict.model.vo.SysDictTypeVO;
 import cn.sichu.system.dict.service.IDictService;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.log.annotation.Log;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

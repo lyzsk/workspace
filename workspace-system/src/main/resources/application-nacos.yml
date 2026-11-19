@@ -1,0 +1,9 @@
+spring:
+  config:
+    import:
+      - optional:nacos:workspace-shared.yaml?group=${NACOS_CONFIG_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+      - optional:nacos:workspace-system.yaml?group=${NACOS_CONFIG_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+  cloud:
+    nacos:
+      config:
+        enabled: true

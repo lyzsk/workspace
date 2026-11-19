@@ -59,7 +59,8 @@ class AppAuthorizationServiceImplTest {
         userAppDeptMapper = mock(SysUserAppDeptMapper.class);
         authorizationMapper = mock(AppAuthorizationMapper.class);
         service = new AppAuthorizationServiceImpl(userMapper, appMapper, userAppMapper,
-            userAppDeptMapper, authorizationMapper, mock(SysRoleDeptMapper.class), mock(SysDeptMapper.class));
+            userAppDeptMapper, authorizationMapper, mock(SysRoleDeptMapper.class), mock(SysDeptMapper.class),
+            mock(cn.sichu.common.redis.cache.AuthorizationStore.class), new com.fasterxml.jackson.databind.ObjectMapper());
         when(userMapper.selectById(1L)).thenReturn(user());
         when(appMapper.selectOne(any())).thenReturn(app());
         grant = new SysUserApp();

@@ -83,7 +83,7 @@ export async function getSessionUser(token: string): Promise<UserInfo> {
     );
 }
 
-export async function refreshRequest(): Promise<LoginResult> {
+export async function refreshRequest(token: string): Promise<LoginResult> {
     if (USE_MOCK) {
         await wait(200);
         return {
@@ -92,7 +92,9 @@ export async function refreshRequest(): Promise<LoginResult> {
         };
     }
     const refresh = async () => unwrap(
-        await client.post<ApiResult<LoginResult>>("/auth/refresh"),
+        await client.post<ApiResult<LoginResult>>("/auth/refresh", undefined, {
+            headers: { Authorization: `Bearer ${token}` },
+        }),
     );
     if (typeof navigator !== "undefined" && navigator.locks) {
         return navigator.locks.request("workspace-auth-refresh", { mode: "exclusive" }, refresh);

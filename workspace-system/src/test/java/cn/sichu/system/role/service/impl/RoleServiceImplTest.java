@@ -1,6 +1,6 @@
 package cn.sichu.system.role.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
@@ -84,7 +84,7 @@ class RoleServiceImplTest {
             }).toList();
         });
         roleService = new RoleServiceImpl(roleMapper, roleMenuMapper, roleDeptMapper, userRoleMapper,
-            appMapper, menuMapper);
+            appMapper, menuMapper, mock(cn.sichu.common.redis.cache.AuthorizationStore.class));
     }
 
     @Test

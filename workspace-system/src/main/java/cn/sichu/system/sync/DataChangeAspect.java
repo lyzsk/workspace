@@ -1,7 +1,7 @@
 package cn.sichu.system.sync;
 
-import cn.sichu.common.event.DataChangedEvent;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.event.DataChangedEvent;
+import cn.sichu.common.core.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

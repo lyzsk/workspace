@@ -1,7 +1,7 @@
 # Workspace 微前端、统一认证与应用权限重构计划 v2
 
 > 日期：2026-11-19  
-> 状态：前四阶段代码已实施；真实中间件与浏览器联调见实施记录，集群补齐尚未实施。  
+> 状态：**已被 `2026-11-19-workspace-microservice-auth-refactor.md` 取代**。最终结构为 gateway + auth + system + common(core/security/redis 包)，认证为 JWT + Redis，不再使用 opaque introspection；本文仅保留设计演进记录。  
 > 范围：workspace 主应用、平台后端、Gateway/Nacos、认证与应用权限；暂不改造现有已接入子应用。  
 > 说明：本文件记录目标架构与规则；实际完成情况见 `2026-11-19-workspace-cloud-auth-qiankun-app-auth-implementation.md`。
 

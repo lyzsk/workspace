@@ -1,6 +1,6 @@
 package cn.sichu.system.notice.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.notice.entity.SysNotificationPreference;
 import cn.sichu.system.notice.model.form.SysNotificationPreferenceForm;
 import cn.sichu.system.notice.service.INotificationPreferenceService;

@@ -1,6 +1,6 @@
 package cn.sichu.tool.document.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.tool.document.model.form.SysDocumentForm;
 import cn.sichu.tool.document.model.form.SysDocumentMemberForm;
 import cn.sichu.tool.document.model.form.SysDocumentOperationForm;

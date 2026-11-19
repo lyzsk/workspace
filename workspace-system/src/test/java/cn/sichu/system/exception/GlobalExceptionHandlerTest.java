@@ -1,8 +1,8 @@
 package cn.sichu.system.exception;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.exception.GlobalExceptionHandler;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.exception.GlobalExceptionHandler;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.code.SystemCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;

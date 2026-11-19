@@ -1,6 +1,6 @@
 package cn.sichu.system.dept.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.dept.entity.SysDept;
 import cn.sichu.system.dept.mapper.SysDeptMapper;
@@ -10,7 +10,7 @@ import cn.sichu.system.dept.service.IDeptService;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.mapper.SysUserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

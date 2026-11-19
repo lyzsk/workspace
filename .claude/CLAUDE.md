@@ -27,16 +27,19 @@
 ## 3. 模块与包
 
 ```
-workspace-common     cn.sichu.common.{base,config,event,exception,id,log,result,utils}
-workspace-system     cn.sichu.system.{app,auth,user,role,menu,dict,dept,log,online,notice,file,security,config,sync}
-workspace-tool       cn.sichu.tool.{config,document}
+workspace-common     cn.sichu.common.core.{base,config,event,exception,id,log,result,utils}
+                     cn.sichu.common.security.{model,token,util}
+                     cn.sichu.common.redis.cache
+workspace-auth       cn.sichu.auth.{config,controller,model,security,service,session}
+workspace-system     cn.sichu.system.{app,auth,user,role,menu,dict,dept,log,online,notice,file,security,config,sync,support}
+workspace-tool       cn.sichu.tool.document
 workspace-quartz     cn.sichu.quartz.{component,config,controller,entity,handler,manager,mapper,model,service}
 workspace-generator  cn.sichu.generator.{controller,model,service}
-workspace-admin      cn.sichu.admin.Application
+workspace-gateway    cn.sichu.gateway.{auth,error,filter}
 workspace-ui         Vue3 + Vite + TS + Pinia + Element Plus
 ```
 
-依赖方向：`admin → {system, tool, quartz, generator}`；`tool → system`；`quartz/generator → common`。framework 与 system 合并，不单独建 framework 模块，但保留包级边界。
+依赖方向：`auth → common`；`system → {common, tool, quartz, generator}`；`tool/quartz/generator → common`；`gateway` 独立。认证采用 JWT + Redis 会话，`workspace-auth` 负责登录/刷新/退出，`workspace-system` 负责用户、角色、菜单与应用授权。
 > 2026-11-14 用户决定删除 `workspace-core`（一直没有真实契约可放，YAGNI）；后续如出现第二个业务应用再按需新增。
 
 system 业务包内分层：
@@ -80,7 +83,7 @@ model{entity,form,query,vo} / converter / code
 - `sys_role.data_scope`：1=全部、2=指定部门（`sys_role_dept`）、3=本部门、4=本部门及以下、5=仅本人；默认 5。
 - `sys_role_dept`：角色-部门关联，只给 `data_scope=2` 用。
 - 全局表（`sys_tenant`/`sys_app`/`sys_menu`/字典）不含 `tenant_id`；租户表（user/role/dept/关联表/业务表）含 `tenant_id` 预留。
-- 完整结构只在 `workspace-admin/src/main/resources/db/migration/V1__baseline.sql`；后续结构变化新增递增迁移，不改已发布旧版本。
+- 完整结构只在 `workspace-system/src/main/resources/db/migration/V1__baseline.sql`；后续结构变化新增递增迁移，不改已发布旧版本。
 - 本地 admin/test 只由 `sql/seed_user.sql` 初始化，不进入 V1，不记录明文口令；migrator 与运行期 DML 账号分离。
 
 ## 7. 当前已完成：common/system/tool/quartz/generator/admin 模块划分、RBAC 与按钮权限、微前端宿主、Quartz RAMJobStore、Generator 元数据到预览/ZIP、Flyway 单一 V1 与本地 seed。

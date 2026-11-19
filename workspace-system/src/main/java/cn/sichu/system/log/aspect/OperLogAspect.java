@@ -1,11 +1,11 @@
 package cn.sichu.system.log.aspect;
 
-import cn.sichu.common.utils.TextUtils;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.utils.TextUtils;
+import cn.sichu.common.core.log.annotation.Log;
 import cn.sichu.system.log.entity.SysOperLog;
 import cn.sichu.system.log.service.ILogService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.security.util.WebRequestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletRequest;

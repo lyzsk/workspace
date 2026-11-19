@@ -1,8 +1,8 @@
 package cn.sichu.system.sync;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.system.sync.model.vo.InternalUserSyncVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

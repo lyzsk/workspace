@@ -1,6 +1,6 @@
 package cn.sichu.system.app.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
 import cn.sichu.system.app.grant.service.IAppAuthorizationService;
@@ -13,7 +13,7 @@ import cn.sichu.system.menu.mapper.SysMenuMapper;
 import cn.sichu.system.role.entity.SysRoleMenu;
 import cn.sichu.system.role.mapper.SysRoleMapper;
 import cn.sichu.system.role.mapper.SysRoleMenuMapper;
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 import cn.sichu.system.user.entity.SysUser;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;

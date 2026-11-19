@@ -1,7 +1,7 @@
 package cn.sichu.system.log.service.impl;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.utils.QuerySortUtils;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.utils.QuerySortUtils;
 import cn.sichu.system.auth.entity.SysLoginLog;
 import cn.sichu.system.auth.mapper.SysLoginLogMapper;
 import cn.sichu.system.log.entity.SysOperLog;
@@ -13,7 +13,7 @@ import cn.sichu.system.log.model.vo.SysOperLogVO;
 import cn.sichu.system.log.service.ILogService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

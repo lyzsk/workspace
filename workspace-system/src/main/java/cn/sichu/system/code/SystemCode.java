@@ -1,6 +1,6 @@
 package cn.sichu.system.code;
 
-import cn.sichu.common.result.IResultCode;
+import cn.sichu.common.core.result.IResultCode;
 import lombok.Getter;
 
 /**

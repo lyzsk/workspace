@@ -1,6 +1,6 @@
 package cn.sichu.system.dept.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.dept.entity.SysDept;
 import cn.sichu.system.dept.mapper.SysDeptMapper;

@@ -1,6 +1,6 @@
 package cn.sichu.system.notice.model.query;
 
-import cn.sichu.common.base.BaseQuery;
+import cn.sichu.common.core.base.BaseQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

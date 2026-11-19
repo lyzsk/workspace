@@ -1,9 +1,9 @@
 package cn.sichu.tool.document.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.ResultCode;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.tool.document.entity.SysDocument;
 import cn.sichu.tool.document.entity.SysDocumentMember;
 import cn.sichu.tool.document.entity.SysDocumentOperation;
@@ -17,11 +17,11 @@ import cn.sichu.tool.document.model.query.SysDocumentQuery;
 import cn.sichu.tool.document.model.vo.SysDocumentMemberVO;
 import cn.sichu.tool.document.model.vo.SysDocumentVO;
 import cn.sichu.tool.document.service.IDocumentService;
+import cn.sichu.tool.document.service.IDocumentUserService;
+import cn.sichu.tool.document.service.IDocumentUserService.DocumentUser;
 import cn.sichu.tool.document.websocket.DocumentWebSocketPublisher;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
-import cn.sichu.system.user.entity.SysUser;
-import cn.sichu.system.user.mapper.SysUserMapper;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -55,7 +55,7 @@ public class DocumentServiceImpl extends BaseImpl<SysDocumentMapper, SysDocument
 
     private final SysDocumentMemberMapper memberMapper;
     private final SysDocumentOperationMapper operationMapper;
-    private final SysUserMapper userMapper;
+    private final IDocumentUserService documentUserService;
     private final ObjectMapper objectMapper;
     private final DocumentWebSocketPublisher eventPublisher;
 
@@ -136,16 +136,15 @@ public class DocumentServiceImpl extends BaseImpl<SysDocumentMapper, SysDocument
         List<SysDocumentMember> members = memberMapper.selectList(
             new LambdaQueryWrapper<SysDocumentMember>().eq(SysDocumentMember::getDocumentId, id));
         List<Long> userIds = members.stream().map(SysDocumentMember::getUserId).distinct().toList();
-        Map<Long, SysUser> users = userIds.isEmpty() ? Map.of()
-            : userMapper.selectList(new LambdaQueryWrapper<SysUser>().in(SysUser::getId, userIds))
-                .stream().collect(java.util.stream.Collectors.toMap(SysUser::getId, user -> user));
+        Map<Long, DocumentUser> users = userIds.isEmpty() ? Map.of()
+            : documentUserService.findUsers(userIds);
         return members.stream().map(member -> {
             SysDocumentMemberVO vo = new SysDocumentMemberVO();
             vo.setId(member.getId());
             vo.setUserId(member.getUserId());
-            SysUser user = users.get(member.getUserId());
-            vo.setUsername(user == null ? null : user.getUsername());
-            vo.setRealName(user == null ? null : user.getRealName());
+            DocumentUser user = users.get(member.getUserId());
+            vo.setUsername(user == null ? null : user.username());
+            vo.setRealName(user == null ? null : user.realName());
             vo.setPermission(member.getPermission());
             return vo;
         }).toList();
@@ -156,22 +155,22 @@ public class DocumentServiceImpl extends BaseImpl<SysDocumentMapper, SysDocument
     public void share(Long id, SysDocumentMemberForm form) {
         LoginUser current = SecurityUtils.getLoginUser();
         SysDocument document = requiredOwner(id, current.getUserId());
-        SysUser target = userMapper.selectById(form.getUserId());
-        if (target == null || target.getStatus() == null || target.getStatus() != 1
-            || !Objects.equals(target.getTenantId(), document.getTenantId())) {
+        DocumentUser target = documentUserService.findUser(form.getUserId());
+        if (target == null || target.status() == null || target.status() != 1
+            || !Objects.equals(target.tenantId(), document.getTenantId())) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "共享用户不存在或已停用");
         }
-        if (Objects.equals(document.getOwnerId(), target.getId())) {
+        if (Objects.equals(document.getOwnerId(), target.id())) {
             return;
         }
         SysDocumentMember member = memberMapper.selectOne(new LambdaQueryWrapper<SysDocumentMember>()
             .eq(SysDocumentMember::getDocumentId, id)
-            .eq(SysDocumentMember::getUserId, target.getId()));
+            .eq(SysDocumentMember::getUserId, target.id()));
         if (member == null) {
             member = new SysDocumentMember();
             member.setTenantId(document.getTenantId());
             member.setDocumentId(id);
-            member.setUserId(target.getId());
+            member.setUserId(target.id());
         }
         member.setPermission(form.getPermission());
         if (member.getId() == null) {

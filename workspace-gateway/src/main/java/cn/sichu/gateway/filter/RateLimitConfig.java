@@ -20,6 +20,7 @@ public class RateLimitConfig {
     }
 
     @Bean
+    @org.springframework.context.annotation.Primary
     KeyResolver userOrIpKeyResolver() {
         return exchange -> {
             String userId = exchange.getRequest().getHeaders()

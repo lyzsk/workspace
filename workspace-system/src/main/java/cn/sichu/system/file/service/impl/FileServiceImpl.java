@@ -1,15 +1,15 @@
 package cn.sichu.system.file.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.file.FileStorage;
-import cn.sichu.common.result.ResultCode;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.file.FileStorage;
+import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.system.file.entity.SysFile;
 import cn.sichu.system.file.mapper.SysFileMapper;
 import cn.sichu.system.file.model.FileDownload;
 import cn.sichu.system.file.service.IFileService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

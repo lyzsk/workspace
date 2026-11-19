@@ -1,6 +1,6 @@
 package ${packageName}.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import ${packageName}.model.form.${ClassName}Form;
 import ${packageName}.model.query.${ClassName}Query;
 import ${packageName}.model.vo.${ClassName}VO;

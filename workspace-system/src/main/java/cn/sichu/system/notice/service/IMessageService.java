@@ -1,6 +1,6 @@
 package cn.sichu.system.notice.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.system.notice.model.query.SysMessageQuery;
 import cn.sichu.system.notice.model.vo.SysMessageVO;
 

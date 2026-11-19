@@ -1,6 +1,6 @@
 package cn.sichu.system.menu.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import cn.sichu.system.app.mapper.SysAppMapper;
@@ -10,10 +10,10 @@ import cn.sichu.system.menu.mapper.SysMenuMapper;
 import cn.sichu.system.menu.model.form.SysMenuForm;
 import cn.sichu.system.menu.model.vo.SysMenuTreeVO;
 import cn.sichu.system.menu.service.IMenuService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +36,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     private final SysMenuMapper menuMapper;
     private final IAppAuthorizationService authorizationService;
     private final SysAppMapper appMapper;
+    private final cn.sichu.common.redis.cache.AuthorizationStore authorizationStore;
 
     @Override
     public List<SysMenuTreeVO> tree(boolean includeButtons) {
@@ -124,6 +125,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
         SysMenu menu = new SysMenu();
         applyForm(menu, form);
         menuMapper.insert(menu);
+        authorizationStore.deleteApplication(menu.getAppCode());
         return menu.getId();
     }
 
@@ -140,12 +142,14 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
         checkParent(form.getParentId(), id, form.getAppCode());
         applyForm(menu, form);
         menuMapper.updateById(menu);
+        authorizationStore.deleteApplication(menu.getAppCode());
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        if (menuMapper.selectById(id) == null) {
+        SysMenu existing = menuMapper.selectById(id);
+        if (existing == null) {
             throw new BusinessException(SystemCode.MENU_NOT_FOUND);
         }
         Long children =
@@ -154,6 +158,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
             throw new BusinessException(SystemCode.MENU_HAS_CHILDREN);
         }
         menuMapper.deleteById(id);
+        authorizationStore.deleteApplication(existing.getAppCode());
     }
 
     private void applyForm(SysMenu menu, SysMenuForm form) {

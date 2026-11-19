@@ -1,10 +1,10 @@
 package cn.sichu.system.log.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
-import cn.sichu.common.utils.CsvUtils;
-import cn.sichu.common.utils.DateTimeUtils;
-import cn.sichu.common.utils.ExcelUtils;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.utils.CsvUtils;
+import cn.sichu.common.core.utils.DateTimeUtils;
+import cn.sichu.common.core.utils.ExcelUtils;
 import cn.sichu.system.log.model.query.SysOperLogQuery;
 import cn.sichu.system.log.model.vo.SysOperLogVO;
 import cn.sichu.system.log.service.ILogService;

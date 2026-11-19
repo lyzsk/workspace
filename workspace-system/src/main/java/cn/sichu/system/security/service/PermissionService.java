@@ -1,8 +1,8 @@
 package cn.sichu.system.security.service;
 
 import cn.sichu.system.app.grant.service.IAppAuthorizationService;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

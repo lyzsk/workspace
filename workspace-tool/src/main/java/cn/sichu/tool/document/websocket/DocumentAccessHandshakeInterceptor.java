@@ -1,7 +1,7 @@
 package cn.sichu.tool.document.websocket;
 
 import cn.sichu.tool.document.service.IDocumentService;
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;

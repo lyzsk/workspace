@@ -1,7 +1,7 @@
 package cn.sichu.tool.document.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.tool.document.model.form.SysDocumentForm;
 import cn.sichu.tool.document.model.form.SysDocumentMemberForm;
 import cn.sichu.tool.document.model.form.SysDocumentOperationForm;
@@ -9,7 +9,7 @@ import cn.sichu.tool.document.model.query.SysDocumentQuery;
 import cn.sichu.tool.document.model.vo.SysDocumentMemberVO;
 import cn.sichu.tool.document.model.vo.SysDocumentVO;
 import cn.sichu.tool.document.service.IDocumentService;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;

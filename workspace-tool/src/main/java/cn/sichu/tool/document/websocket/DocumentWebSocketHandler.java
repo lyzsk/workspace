@@ -2,7 +2,7 @@ package cn.sichu.tool.document.websocket;
 
 import cn.sichu.tool.document.model.form.SysDocumentOperationForm;
 import cn.sichu.tool.document.service.IDocumentService;
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;

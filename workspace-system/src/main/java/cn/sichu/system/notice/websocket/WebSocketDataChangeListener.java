@@ -1,6 +1,6 @@
 package cn.sichu.system.notice.websocket;
 
-import cn.sichu.common.event.DataChangedEvent;
+import cn.sichu.common.core.event.DataChangedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package cn.sichu.system.monitor.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.monitor.model.vo.CacheEntryVO;
 import cn.sichu.system.monitor.model.vo.CacheStatsVO;
 import cn.sichu.system.monitor.service.ICacheService;

@@ -1,7 +1,7 @@
 package cn.sichu.generator.service;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.generator.model.GenColumn;
 import cn.sichu.generator.model.form.GeneratorRequest;
 import lombok.RequiredArgsConstructor;

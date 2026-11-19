@@ -1,5 +1,17 @@
 # TODO
 
+## 微服务认证改造（2026-11-19 深夜）
+
+- [x] 模块拆分：workspace-auth 独立；删除 workspace-admin；workspace-common 按 core/security/redis 包分层
+- [x] 认证改为 JWT(HS256, 30m) + Redis 完整 LoginUser；空闲 30m TTL、绝对 12h、tokenVersion 撤销
+- [x] Gateway 本地验签 + Redis 会话校验；/api/auth/** → workspace-auth，其余 → workspace-system
+- [x] auth → system 使用 OpenFeign；内部接口 /api/internal/users/**，服务凭证保护
+- [x] 全仓后端测试通过、前端测试与构建通过
+- [ ] 启动 Nacos/Redis/PostgreSQL，联调 system → auth → gateway → UI 全链路
+- [ ] 真实 Redis 会话过期、空闲退出、改密撤销、强退验证
+- [ ] V5 的 sys_refresh_token 表保留但已不再使用，决定是否后续迁移清理
+- [ ] 统一 auth/system 两份 Feign DTO 的字段校验（当前靠 JSON 字段名一致）
+
 ## 微前端与云原生改造（2026-11-19）
 
 - [x] Nacos Discovery + Spring Cloud Gateway 骨架、RequestId、统一错误、Redis 限流配置

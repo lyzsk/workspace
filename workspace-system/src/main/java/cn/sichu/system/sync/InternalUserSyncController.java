@@ -1,7 +1,7 @@
 package cn.sichu.system.sync;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.sync.model.vo.InternalUserSyncVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;

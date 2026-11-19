@@ -1,8 +1,8 @@
 package cn.sichu.system.notice.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.dept.entity.SysDept;
 import cn.sichu.system.dept.mapper.SysDeptMapper;
@@ -18,8 +18,8 @@ import cn.sichu.system.notice.service.INoticeService;
 import cn.sichu.system.notice.websocket.NotificationEventPublisher;
 import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.mapper.SysRoleMapper;
-import cn.sichu.system.security.model.LoginUser;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.model.LoginUser;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.entity.SysUserRole;
 import cn.sichu.system.user.mapper.SysUserMapper;

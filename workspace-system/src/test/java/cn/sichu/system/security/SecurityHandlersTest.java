@@ -1,6 +1,6 @@
 package cn.sichu.system.security;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.security.handler.ApiErrorWriter;
 import cn.sichu.system.security.handler.RestAccessDeniedHandler;
 import cn.sichu.system.security.handler.RestAuthenticationEntryPoint;

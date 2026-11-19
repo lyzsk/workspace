@@ -1,19 +1,19 @@
 package cn.sichu.system.online.service.impl;
 
+import cn.sichu.common.redis.cache.LoginSessionStore;
+import cn.sichu.common.security.model.LoginSession;
 import cn.sichu.system.online.model.vo.SysOnlineUserVO;
 import cn.sichu.system.online.service.IOnlineUserService;
-import cn.sichu.system.security.entity.SysUserSession;
-import cn.sichu.system.security.mapper.SysUserSessionMapper;
 import cn.sichu.system.security.service.AuthTokenStore;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.mapper.SysUserMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -25,16 +25,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OnlineUserServiceImpl implements IOnlineUserService {
 
-    private final SysUserSessionMapper sessionMapper;
+    private final LoginSessionStore sessionStore;
     private final SysUserMapper userMapper;
     private final AuthTokenStore authTokenStore;
 
     @Override
     public List<SysOnlineUserVO> listOnline() {
-        return sessionMapper.selectList(
-            new LambdaQueryWrapper<SysUserSession>().eq(SysUserSession::getRevoked, 0)
-                .gt(SysUserSession::getExpiresAt, LocalDateTime.now())
-                .orderByDesc(SysUserSession::getLoginTime)).stream().map(this::toVO).toList();
+        LocalDateTime now = LocalDateTime.now();
+        return sessionStore.listAll().stream()
+            .filter(session -> !session.revoked() && now.isBefore(session.expiresAt()))
+            .sorted(Comparator.comparing(LoginSession::loginTime).reversed())
+            .map(this::toVO).toList();
     }
 
     @Override
@@ -47,20 +48,19 @@ public class OnlineUserServiceImpl implements IOnlineUserService {
         authTokenStore.revokeAllSessions(userId);
     }
 
-    private SysOnlineUserVO toVO(SysUserSession session) {
+    private SysOnlineUserVO toVO(LoginSession session) {
         SysOnlineUserVO vo = new SysOnlineUserVO();
-        vo.setId(session.getJti());
-        vo.setUserId(session.getUserId() == null ? null : session.getUserId().toString());
-        SysUser user = userMapper.selectById(session.getUserId());
+        vo.setId(session.sessionId());
+        vo.setUserId(session.loginUser().getUserId() == null ? null
+            : session.loginUser().getUserId().toString());
+        SysUser user = userMapper.selectById(session.loginUser().getUserId());
         if (user != null) {
             vo.setUsername(user.getUsername());
             vo.setRealName(user.getRealName());
         }
-        vo.setIp(session.getIp());
-        vo.setUserAgent(session.getUserAgent());
-        vo.setLoginTime(session.getLoginTime());
-        vo.setLastSeenAt(session.getLastSeenAt());
-        vo.setExpiresAt(session.getExpiresAt());
+        vo.setLoginTime(session.loginTime());
+        vo.setLastSeenAt(session.lastSeenAt());
+        vo.setExpiresAt(session.expiresAt());
         return vo;
     }
 }

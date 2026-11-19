@@ -2,7 +2,7 @@
 
 > 日期：2026-11-19  
 > 范围：Nacos/Gateway → 不透明认证 → qiankun → 应用授权。  
-> 状态：代码与本地数据库迁移完成，离线测试通过；真实 Nacos/Redis/浏览器联调未完成。
+> 状态：**认证部分已被 `2026-11-19-workspace-microservice-auth-refactor.md` 取代**（opaque → JWT + Redis，架构 → gateway/auth/system）。qiankun 与应用授权部分仍有效。
 
 ## 1. 已实施能力
 

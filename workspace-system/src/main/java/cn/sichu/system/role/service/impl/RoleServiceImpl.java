@@ -1,9 +1,9 @@
 package cn.sichu.system.role.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.utils.QuerySortUtils;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.utils.QuerySortUtils;
+import cn.sichu.common.core.base.BaseImpl;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.mapper.SysAppMapper;
 import cn.sichu.system.code.SystemCode;
@@ -19,7 +19,7 @@ import cn.sichu.system.role.model.form.SysRoleForm;
 import cn.sichu.system.role.model.query.SysRoleQuery;
 import cn.sichu.system.role.model.vo.SysRoleVO;
 import cn.sichu.system.role.service.IRoleService;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUserRole;
 import cn.sichu.system.user.mapper.SysUserRoleMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -50,6 +50,7 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     private final SysUserRoleMapper userRoleMapper;
     private final SysAppMapper appMapper;
     private final SysMenuMapper menuMapper;
+    private final cn.sichu.common.redis.cache.AuthorizationStore authorizationStore;
 
     @Override
     public PageResult<SysRoleVO> page(SysRoleQuery query) {
@@ -93,6 +94,7 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         roleMapper.insert(role);
         saveDepts(role.getId(), form);
         saveMenus(role, form.getMenuIds());
+        authorizationStore.deleteApplication(app.getCode());
         return role.getId();
     }
 
@@ -113,6 +115,7 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         roleMapper.updateById(role);
         saveDepts(role.getId(), form);
         saveMenus(role, form.getMenuIds());
+        authorizationStore.deleteApplication(app.getCode());
     }
 
     @Override
@@ -128,9 +131,13 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         if (assigned > 0) {
             throw new BusinessException(SystemCode.ROLE_IN_USE);
         }
+        SysApp app = appMapper.selectById(role.getAppId());
         roleMapper.deleteById(id);
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, id));
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>().eq(SysRoleDept::getRoleId, id));
+        if (app != null) {
+            authorizationStore.deleteApplication(app.getCode());
+        }
     }
 
     @Override
@@ -152,6 +159,10 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         }
         checkRoleAllowed(role);
         saveMenus(role, menuIds);
+        SysApp app = appMapper.selectById(role.getAppId());
+        if (app != null) {
+            authorizationStore.deleteApplication(app.getCode());
+        }
     }
 
     private LambdaQueryWrapper<SysRole> buildWrapper(SysRoleQuery query) {

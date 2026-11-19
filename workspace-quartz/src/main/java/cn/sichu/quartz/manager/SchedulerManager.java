@@ -1,7 +1,7 @@
 package cn.sichu.quartz.manager;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.ResultCode;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.quartz.entity.SysJob;
 import cn.sichu.quartz.handler.JobExecution;
 import lombok.RequiredArgsConstructor;

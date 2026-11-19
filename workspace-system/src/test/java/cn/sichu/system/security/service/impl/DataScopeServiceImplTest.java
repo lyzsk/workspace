@@ -3,7 +3,7 @@ package cn.sichu.system.security.service.impl;
 import cn.sichu.system.app.grant.model.vo.AppAuthorizationVO;
 import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import cn.sichu.system.security.model.DataScopeFilter;
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 import cn.sichu.system.user.entity.SysUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

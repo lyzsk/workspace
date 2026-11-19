@@ -1,6 +1,6 @@
 package cn.sichu.quartz.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.quartz.model.form.SysJobForm;
 import cn.sichu.quartz.model.query.SysJobQuery;
 import cn.sichu.quartz.model.vo.SysJobVO;

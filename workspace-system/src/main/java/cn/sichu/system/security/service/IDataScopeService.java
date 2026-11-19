@@ -10,4 +10,6 @@ import cn.sichu.system.security.model.DataScopeFilter;
 public interface IDataScopeService {
 
     DataScopeFilter current();
+
+    DataScopeFilter current(String appCode);
 }

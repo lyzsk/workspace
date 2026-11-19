@@ -1,6 +1,6 @@
 package cn.sichu.generator.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.generator.model.GenColumn;
 import cn.sichu.generator.model.form.GeneratorRequest;
 import cn.sichu.generator.service.GeneratorMetadataService;

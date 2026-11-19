@@ -1,10 +1,10 @@
 package cn.sichu.system.dept.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.dept.model.form.SysDeptForm;
 import cn.sichu.system.dept.model.vo.SysDeptTreeVO;
 import cn.sichu.system.dept.service.IDeptService;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.log.annotation.Log;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

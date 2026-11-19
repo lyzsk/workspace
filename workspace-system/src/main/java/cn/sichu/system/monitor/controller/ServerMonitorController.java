@@ -1,6 +1,6 @@
 package cn.sichu.system.monitor.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.monitor.model.vo.ServerInfoVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

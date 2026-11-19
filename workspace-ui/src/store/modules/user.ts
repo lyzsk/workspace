@@ -227,7 +227,7 @@ export const useUserStore = defineStore(
             status.value = "refreshing";
             const operation = (async () => {
                 try {
-                    const result = await refreshRequest();
+                    const result = await refreshRequest(token.value);
                     if (epoch !== sessionEpoch.value || !token.value) {
                         throw new Error("STALE_SESSION");
                     }

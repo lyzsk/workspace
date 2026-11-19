@@ -1,6 +1,6 @@
 package cn.sichu.system.config;
 
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.util.SecurityUtils;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;

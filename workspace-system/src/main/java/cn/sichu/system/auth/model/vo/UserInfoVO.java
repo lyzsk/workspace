@@ -1,6 +1,6 @@
 package cn.sichu.system.auth.model.vo;
 
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 
 import java.util.Set;
 

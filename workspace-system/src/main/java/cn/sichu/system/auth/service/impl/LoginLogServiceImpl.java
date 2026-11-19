@@ -1,14 +1,17 @@
 package cn.sichu.system.auth.service.impl;
 
-import cn.sichu.common.utils.TextUtils;
+import cn.sichu.common.core.utils.TextUtils;
 import cn.sichu.system.auth.entity.SysLoginLog;
 import cn.sichu.system.auth.mapper.SysLoginLogMapper;
 import cn.sichu.system.auth.service.ILoginLogService;
-import cn.sichu.system.security.model.LoginUser;
 import cn.sichu.system.security.util.WebRequestUtils;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.system.user.entity.SysUser;
+import cn.sichu.system.user.mapper.SysUserMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,52 +24,69 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LoginLogServiceImpl extends BaseImpl<SysLoginLogMapper, SysLoginLog> implements ILoginLogService {
+public class LoginLogServiceImpl implements ILoginLogService {
 
-    private static final int STATUS_SUCCESS = 1;
-    private static final int STATUS_FAILURE = 0;
     private static final String LOGIN_TYPE_PASSWORD = "PASSWORD";
 
     private final SysLoginLogMapper loginLogMapper;
+    private final SysUserMapper userMapper;
+
+    @Value("${workspace.login.max-fail-count:5}")
+    private int maxFailCount;
+
+    @Value("${workspace.login.lock-minutes:15}")
+    private long lockMinutes;
 
     @Override
-    public void recordSuccess(LoginUser loginUser) {
-        SysLoginLog entry = new SysLoginLog();
-        entry.setTenantId(loginUser.getTenantId());
-        entry.setUserId(loginUser.getUserId());
-        entry.setUsername(loginUser.getUsername());
-        entry.setLoginType(LOGIN_TYPE_PASSWORD);
-        entry.setStatus(STATUS_SUCCESS);
-        entry.setMessage("登录成功");
-        fillRequest(entry);
-        insertLog(entry);
-    }
-
-    @Override
-    public void recordFailure(String username, String message) {
+    public void record(String username, boolean success, String message, Long userId) {
         SysLoginLog entry = new SysLoginLog();
         entry.setTenantId(0L);
-        entry.setUsername(username);
+        entry.setUserId(userId);
+        entry.setUsername(TextUtils.truncate(username, 50));
         entry.setLoginType(LOGIN_TYPE_PASSWORD);
-        entry.setStatus(STATUS_FAILURE);
-        entry.setMessage(message);
-        fillRequest(entry);
-        insertLog(entry);
-    }
-
-    private void fillRequest(SysLoginLog entry) {
+        entry.setStatus(success ? 1 : 0);
+        entry.setMessage(TextUtils.truncate(message, 500));
         entry.setLoginTime(LocalDateTime.now());
-        entry.setIp(TextUtils.truncate(WebRequestUtils.clientIp(), 64));
-        entry.setUserAgent(TextUtils.truncate(WebRequestUtils.userAgent(), 500));
-    }
-
-    private void insertLog(SysLoginLog entry) {
         try {
-            entry.setUsername(TextUtils.truncate(entry.getUsername(), 50));
-            entry.setMessage(TextUtils.truncate(entry.getMessage(), 500));
+            entry.setIp(TextUtils.truncate(WebRequestUtils.clientIp(), 64));
+            entry.setUserAgent(TextUtils.truncate(WebRequestUtils.userAgent(), 500));
+        } catch (Exception ignored) {
+        }
+        try {
             loginLogMapper.insert(entry);
         } catch (Exception e) {
             log.warn("写登录日志失败: {}", e.getMessage());
         }
+    }
+
+    @Override
+    public int increaseLoginFailure(String username) {
+        SysUser user = userMapper.selectOne(
+            new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username));
+        if (user == null) {
+            return 0;
+        }
+        int current = user.getLoginFailCount() == null ? 0 : user.getLoginFailCount();
+        if (user.getLockedUntil() != null && user.getLockedUntil().isBefore(LocalDateTime.now())) {
+            current = 0;
+        }
+        int failCount = current + 1;
+        LambdaUpdateWrapper<SysUser> update = new LambdaUpdateWrapper<>();
+        update.eq(SysUser::getId, user.getId()).set(SysUser::getLoginFailCount, failCount)
+            .set(SysUser::getUpdateTime, LocalDateTime.now());
+        if (failCount >= maxFailCount) {
+            update.set(SysUser::getLockedUntil, LocalDateTime.now().plusMinutes(lockMinutes));
+        }
+        userMapper.update(null, update);
+        return failCount;
+    }
+
+    @Override
+    public void resetLoginFailure(Long userId) {
+        LambdaUpdateWrapper<SysUser> update = new LambdaUpdateWrapper<>();
+        update.eq(SysUser::getId, userId).set(SysUser::getLoginFailCount, 0)
+            .set(SysUser::getLockedUntil, null)
+            .set(SysUser::getUpdateTime, LocalDateTime.now());
+        userMapper.update(null, update);
     }
 }

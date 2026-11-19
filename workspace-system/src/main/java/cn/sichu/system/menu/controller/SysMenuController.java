@@ -1,7 +1,7 @@
 package cn.sichu.system.menu.controller;
 
-import cn.sichu.common.result.Result;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.log.annotation.Log;
 import cn.sichu.system.menu.model.form.SysMenuForm;
 import cn.sichu.system.menu.model.vo.SysMenuTreeVO;
 import cn.sichu.system.menu.service.IMenuService;

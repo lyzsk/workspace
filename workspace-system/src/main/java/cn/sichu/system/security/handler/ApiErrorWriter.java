@@ -1,7 +1,7 @@
 package cn.sichu.system.security.handler;
 
-import cn.sichu.common.result.IResultCode;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.IResultCode;
+import cn.sichu.common.core.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

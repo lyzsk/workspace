@@ -1,6 +1,6 @@
 package cn.sichu.system.security;
 
-import cn.sichu.system.security.model.LoginUser;
+import cn.sichu.common.security.model.LoginUser;
 import cn.sichu.system.user.entity.SysUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;

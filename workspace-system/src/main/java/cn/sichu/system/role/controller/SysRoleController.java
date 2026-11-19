@@ -1,11 +1,11 @@
 package cn.sichu.system.role.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
-import cn.sichu.common.utils.CsvUtils;
-import cn.sichu.common.utils.DateTimeUtils;
-import cn.sichu.common.utils.ExcelUtils;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.utils.CsvUtils;
+import cn.sichu.common.core.utils.DateTimeUtils;
+import cn.sichu.common.core.utils.ExcelUtils;
+import cn.sichu.common.core.log.annotation.Log;
 import cn.sichu.system.role.model.form.SysRoleForm;
 import cn.sichu.system.role.model.form.SysRoleMenuForm;
 import cn.sichu.system.role.model.query.SysRoleQuery;

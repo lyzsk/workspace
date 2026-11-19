@@ -1,6 +1,6 @@
 package cn.sichu.system.log.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.system.log.entity.SysOperLog;
 import cn.sichu.system.log.model.query.SysLoginLogQuery;
 import cn.sichu.system.log.model.query.SysOperLogQuery;

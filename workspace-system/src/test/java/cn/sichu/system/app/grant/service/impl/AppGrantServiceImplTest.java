@@ -1,6 +1,6 @@
 package cn.sichu.system.app.grant.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.entity.SysUserApp;
 import cn.sichu.system.app.grant.entity.SysUserAppDept;
@@ -60,7 +60,7 @@ class AppGrantServiceImplTest {
         userRoleMapper = mock(SysUserRoleMapper.class);
         service = new AppGrantServiceImpl(userMapper, appMapper, userAppMapper, userAppDeptMapper,
             mock(AppAuthorizationMapper.class), roleMapper, userRoleMapper, mock(SysDeptMapper.class),
-            mock(ApplicationEventPublisher.class));
+            mock(ApplicationEventPublisher.class), mock(cn.sichu.common.redis.cache.AuthorizationStore.class));
         SysUser user = new SysUser();
         user.setId(1L);
         user.setTenantId(0L);

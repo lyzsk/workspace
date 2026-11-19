@@ -1,6 +1,6 @@
 package cn.sichu.system.dict.service;
 
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.system.dict.model.form.SysDictDataForm;
 import cn.sichu.system.dict.model.form.SysDictTypeForm;
 import cn.sichu.system.dict.model.query.SysDictDataQuery;

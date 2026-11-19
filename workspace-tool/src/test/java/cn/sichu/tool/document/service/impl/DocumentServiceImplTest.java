@@ -8,7 +8,7 @@ import cn.sichu.tool.document.mapper.SysDocumentMemberMapper;
 import cn.sichu.tool.document.mapper.SysDocumentOperationMapper;
 import cn.sichu.tool.document.model.form.SysDocumentOperationForm;
 import cn.sichu.tool.document.websocket.DocumentWebSocketPublisher;
-import cn.sichu.system.user.mapper.SysUserMapper;
+import cn.sichu.tool.document.service.IDocumentUserService;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -58,7 +58,7 @@ class DocumentServiceImplTest {
         memberMapper = mock(SysDocumentMemberMapper.class);
         operationMapper = mock(SysDocumentOperationMapper.class);
         eventPublisher = mock(DocumentWebSocketPublisher.class);
-        service = new DocumentServiceImpl(memberMapper, operationMapper, mock(SysUserMapper.class),
+        service = new DocumentServiceImpl(memberMapper, operationMapper, mock(IDocumentUserService.class),
             objectMapper, eventPublisher);
         ReflectionTestUtils.setField(service, "baseMapper", documentMapper);
     }

@@ -1,0 +1,20 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: ${REDIS_TIMEOUT:2s}
+
+server:
+  port: ${SERVER_PORT:9200}
+
+workspace:
+  jwt:
+    secret: ${JWT_SECRET}
+  internal:
+    service-token: ${WORKSPACE_SERVICE_TOKEN}
+
+logging:
+  level:
+    cn.sichu: info

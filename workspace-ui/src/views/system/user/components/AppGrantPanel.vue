@@ -39,7 +39,7 @@
                 </el-form-item>
                 <el-form-item label="数据权限">
                     <el-select v-model="form.dataScope" style="width: 100%">
-                        <el-option label="跟随应用角色" :value="null" />
+                        <el-option label="跟随应用角色" :value="0" />
                         <el-option label="全部数据" :value="1" />
                         <el-option label="指定部门" :value="2" />
                         <el-option label="本部门" :value="3" />
@@ -96,7 +96,7 @@ const form = reactive({
     appName: "",
     status: 0,
     roleIds: [] as string[],
-    dataScope: null as number | null,
+    dataScope: 0 as number | null,
     deptIds: [] as string[],
 });
 
@@ -131,7 +131,7 @@ async function openConfig(grant: UserAppGrant) {
         appName: grant.appName,
         status: grant.status,
         roleIds: [...grant.roleIds],
-        dataScope: grant.dataScope ?? null,
+        dataScope: grant.dataScope ?? 0,
         deptIds: [...grant.deptIds],
     });
     roleOptions.value = [];
@@ -179,7 +179,7 @@ async function save() {
 }
 
 function scopeLabel(scope?: number | null) {
-    return scope == null
+    return scope == null || scope === 0
         ? "跟随角色"
         : ({ 1: "全部数据", 2: "指定部门", 3: "本部门", 4: "本部门及以下", 5: "仅本人" })[scope];
 }

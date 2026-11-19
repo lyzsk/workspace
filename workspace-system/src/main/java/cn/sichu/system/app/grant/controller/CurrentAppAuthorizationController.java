@@ -1,6 +1,6 @@
 package cn.sichu.system.app.grant.controller;
 
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.system.app.grant.model.vo.AppAuthorizationVO;
 import cn.sichu.system.app.grant.service.IAppAuthorizationService;
 import lombok.RequiredArgsConstructor;

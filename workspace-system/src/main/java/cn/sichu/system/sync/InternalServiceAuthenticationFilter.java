@@ -28,16 +28,13 @@ import java.util.List;
 public class InternalServiceAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String AUTHORITY = "INTERNAL_USER_SYNC";
-    public static final String AUTHORIZATION_AUTHORITY = "INTERNAL_APP_AUTHORIZATION";
-    private static final String SYNC_PATH = "/api/internal/users/sync";
-    private static final String AUTHORIZATION_PATH_PREFIX = "/api/internal/authorization/";
+    private static final String USERS_PATH_PREFIX = "/api/internal/users/";
 
     private final InternalUserSyncProperties properties;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !SYNC_PATH.equals(request.getServletPath())
-            && !request.getServletPath().startsWith(AUTHORIZATION_PATH_PREFIX);
+        return !request.getServletPath().startsWith(USERS_PATH_PREFIX);
     }
 
     @Override
@@ -68,8 +65,7 @@ public class InternalServiceAuthenticationFilter extends OncePerRequestFilter {
             if (matches) {
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(appCode, null,
-                        List.of(new SimpleGrantedAuthority(AUTHORITY),
-                            new SimpleGrantedAuthority(AUTHORIZATION_AUTHORITY)));
+                        List.of(new SimpleGrantedAuthority(AUTHORITY)));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (IllegalArgumentException ignored) {

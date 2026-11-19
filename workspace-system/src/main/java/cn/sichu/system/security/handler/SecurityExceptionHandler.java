@@ -1,9 +1,8 @@
 package cn.sichu.system.security.handler;
 
-import cn.sichu.common.result.Result;
-import cn.sichu.common.result.ResultCode;
-import cn.sichu.system.security.service.AuthenticationStateException;
-import cn.sichu.system.security.token.TokenException;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.security.token.TokenException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -36,10 +35,4 @@ public class SecurityExceptionHandler {
         return Result.failed(ResultCode.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(AuthenticationStateException.class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public Result<Void> handleStateUnavailable(AuthenticationStateException e) {
-        log.error("认证状态服务不可用", e);
-        return Result.failed(ResultCode.FAILED, "认证状态服务不可用");
-    }
 }

@@ -1,9 +1,9 @@
 package cn.sichu.system.user.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.ResultCode;
-import cn.sichu.common.utils.QuerySortUtils;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.core.utils.QuerySortUtils;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.entity.SysUserApp;
 import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
@@ -15,11 +15,16 @@ import cn.sichu.system.role.mapper.SysRoleMapper;
 import cn.sichu.system.security.service.AuthTokenStore;
 import cn.sichu.system.security.model.DataScopeFilter;
 import cn.sichu.system.security.service.IDataScopeService;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.entity.SysUserRole;
 import cn.sichu.system.user.mapper.SysUserMapper;
 import cn.sichu.system.user.mapper.SysUserRoleMapper;
+import cn.sichu.system.auth.model.vo.UserInfoVO;
+import cn.sichu.system.auth.model.vo.UserOrgVO;
+import cn.sichu.system.security.mapper.AuthQueryMapper;
+import cn.sichu.system.user.model.form.PasswordForm;
+import cn.sichu.system.user.model.form.ProfileForm;
 import cn.sichu.system.user.model.form.SysUserForm;
 import cn.sichu.system.user.model.query.SysUserQuery;
 import cn.sichu.system.user.model.vo.SysUserPageVO;
@@ -27,7 +32,7 @@ import cn.sichu.system.user.service.IUserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -57,8 +62,10 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     private final SysAppMapper appMapper;
     private final SysRoleMapper roleMapper;
     private final SysUserAppMapper userAppMapper;
+    private final AuthQueryMapper authQueryMapper;
 
     @Override
+    @cn.sichu.system.security.datascope.DataScope(appCode = "workspace")
     public PageResult<SysUserPageVO> page(SysUserQuery query) {
         Page<SysUser> page = new Page<>(query.getPageNum(), query.getPageSize());
         Page<SysUser> result = baseMapper.selectPage(page, buildWrapper(query));
@@ -163,6 +170,7 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     }
 
     @Override
+    @cn.sichu.system.security.datascope.DataScope(appCode = "workspace")
     public List<SysUserPageVO> list(SysUserQuery query) {
         return baseMapper.selectList(buildWrapper(query)).stream()
             .map(user -> SysUserPageVO.from(user, roleIdsOf(user.getId()))).toList();
@@ -200,7 +208,8 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     }
 
     private void applyDataScope(LambdaQueryWrapper<SysUser> wrapper) {
-        DataScopeFilter scope = dataScopeService.current();
+        DataScopeFilter scoped = cn.sichu.system.security.model.DataScopeContext.get();
+        DataScopeFilter scope = scoped == null ? dataScopeService.current() : scoped;
         if (scope.all()) {
             return;
         }
@@ -239,6 +248,56 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
             return;
         }
         throw new BusinessException(ResultCode.FORBIDDEN);
+    }
+
+    @Override
+    @Transactional
+    public UserInfoVO updateProfile(Long id, ProfileForm form) {
+        SysUser user = baseMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(SystemCode.USER_NOT_FOUND);
+        }
+        user.setRealName(form.getRealName());
+        user.setGender(form.getGender() == null ? 0 : form.getGender());
+        user.setEmail(form.getEmail());
+        user.setMobile(form.getMobile());
+        if (form.getAvatar() != null) {
+            user.setAvatar(form.getAvatar());
+        }
+        baseMapper.updateById(user);
+        return toUserInfo(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long id, PasswordForm form) {
+        if (!Objects.equals(form.getNewPassword(), form.getConfirmPassword())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "两次输入的新密码不一致");
+        }
+        SysUser user = baseMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(SystemCode.USER_NOT_FOUND);
+        }
+        if (!passwordEncoder.matches(form.getCurrentPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.BUSINESS_ERROR, "当前密码不正确");
+        }
+        if (passwordEncoder.matches(form.getNewPassword(), user.getPassword())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "新密码不能与当前密码相同");
+        }
+        user.setPassword(passwordEncoder.encode(form.getNewPassword()));
+        user.setTokenVersion((user.getTokenVersion() == null ? 0L : user.getTokenVersion()) + 1);
+        baseMapper.updateById(user);
+        authTokenStore.revokeAllSessions(id);
+    }
+
+    private UserInfoVO toUserInfo(SysUser user) {
+        UserOrgVO org = authQueryMapper.selectUserOrg(user.getId());
+        return new UserInfoVO(user.getId(), user.getUsername(), user.getRealName(),
+            user.getGender(), user.getEmail(), user.getMobile(), user.getAvatar(),
+            user.getTenantId(), org == null ? null : org.tenantName(), user.getDeptId(),
+            org == null ? null : org.deptName(),
+            new java.util.LinkedHashSet<>(authQueryMapper.selectRoleCodes(user.getId())),
+            new java.util.LinkedHashSet<>(authQueryMapper.selectPermissions(user.getId())));
     }
 
     private List<String> roleIdsOf(Long userId) {

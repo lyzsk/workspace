@@ -1,7 +1,7 @@
 package cn.sichu.system.dict.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
-import cn.sichu.common.result.PageResult;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.core.result.PageResult;
 import cn.sichu.system.code.SystemCode;
 import cn.sichu.system.dict.entity.SysDictData;
 import cn.sichu.system.dict.entity.SysDictType;
@@ -16,7 +16,7 @@ import cn.sichu.system.dict.model.vo.SysDictTypeVO;
 import cn.sichu.system.dict.service.IDictService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import cn.sichu.common.base.BaseImpl;
+import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

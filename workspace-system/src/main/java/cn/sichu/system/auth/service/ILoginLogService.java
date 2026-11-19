@@ -1,7 +1,5 @@
 package cn.sichu.system.auth.service;
 
-import cn.sichu.system.security.model.LoginUser;
-
 /**
  *
  * @author sichu huang
@@ -9,7 +7,9 @@ import cn.sichu.system.security.model.LoginUser;
  */
 public interface ILoginLogService {
 
-    void recordSuccess(LoginUser loginUser);
+    void record(String username, boolean success, String message, Long userId);
 
-    void recordFailure(String username, String message);
+    int increaseLoginFailure(String username);
+
+    void resetLoginFailure(Long userId);
 }

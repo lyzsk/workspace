@@ -1,6 +1,7 @@
 package cn.sichu.system.app.grant.service.impl;
 
-import cn.sichu.common.exception.BusinessException;
+import cn.sichu.common.core.exception.BusinessException;
+import cn.sichu.common.redis.cache.AuthorizationStore;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.entity.SysUserApp;
 import cn.sichu.system.app.grant.entity.SysUserAppDept;
@@ -18,7 +19,7 @@ import cn.sichu.system.menu.model.vo.SysMenuTreeVO;
 import cn.sichu.system.role.entity.SysRole;
 import cn.sichu.system.role.entity.SysRoleDept;
 import cn.sichu.system.role.mapper.SysRoleDeptMapper;
-import cn.sichu.system.security.util.SecurityUtils;
+import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUser;
 import cn.sichu.system.user.mapper.SysUserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -48,9 +49,27 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
     private final AppAuthorizationMapper authorizationMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysDeptMapper deptMapper;
+    private final AuthorizationStore authorizationStore;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Override
     public AppAuthorizationVO getAuthorization(Long userId, String appCode) {
+        try {
+            var cached = authorizationStore.find(userId, appCode);
+            if (cached.isPresent()) {
+                return objectMapper.convertValue(cached.get(), AppAuthorizationVO.class);
+            }
+        } catch (Exception ignored) {
+        }
+        AppAuthorizationVO result = computeAuthorization(userId, appCode);
+        try {
+            authorizationStore.save(userId, appCode, result);
+        } catch (Exception ignored) {
+        }
+        return result;
+    }
+
+    private AppAuthorizationVO computeAuthorization(Long userId, String appCode) {
         SysUser user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(SystemCode.USER_NOT_FOUND);
@@ -61,24 +80,25 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
             throw new BusinessException(SystemCode.APP_NOT_FOUND);
         }
         SysUserApp grant = findGrant(userId, app.getId());
-        boolean baseAccessible =
-            isActiveUser(user) && Objects.equals(app.getStatus(), 1)
-                && grant != null && Objects.equals(grant.getStatus(), 1);
-        List<SysRole> roles =
-            baseAccessible ? authorizationMapper.selectRoles(userId, appCode) :
-                List.of();
-        boolean accessible = baseAccessible && !roles.isEmpty();
+        boolean superAdmin = isPlatformSuperAdmin(userId);
+        boolean baseAccessible = isActiveUser(user)
+            && Objects.equals(app.getStatus(), 1)
+            && (superAdmin || grant != null && Objects.equals(grant.getStatus(), 1));
+        List<SysRole> roles = baseAccessible
+            ? authorizationMapper.selectRoles(userId, appCode) : List.of();
+        boolean accessible = baseAccessible && (superAdmin || !roles.isEmpty());
         Set<String> roleCodes = roles.stream().map(SysRole::getRoleCode)
-            .collect(
-                java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+            .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        if (superAdmin) {
+            roleCodes.add(SUPER_ADMIN);
+        }
+        boolean allPermissions = superAdmin
+            || accessible && WORKSPACE.equals(appCode) && roleCodes.contains(SUPER_ADMIN);
         Set<String> permissions = Set.of();
-        boolean workspaceSuper =
-            accessible && WORKSPACE.equals(appCode) && roleCodes.contains(
-                SUPER_ADMIN);
         if (accessible) {
-            permissions = workspaceSuper ?
-                authorizationMapper.selectAllPermissions(appCode) :
-                authorizationMapper.selectPermissions(userId, appCode);
+            permissions = allPermissions
+                ? authorizationMapper.selectAllPermissions(appCode)
+                : authorizationMapper.selectPermissions(userId, appCode);
         }
 
         AppAuthorizationVO result = new AppAuthorizationVO();
@@ -86,12 +106,18 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
         result.setAccessible(accessible);
         result.setRoles(roleCodes);
         result.setPermissions(permissions);
-        result.setMenus(accessible ? buildMenuTree(
-            workspaceSuper ? authorizationMapper.selectAllMenus(appCode) :
-                authorizationMapper.selectMenus(userId, appCode)) : List.of());
+        result.setMenus(accessible ? buildMenuTree(allPermissions
+            ? authorizationMapper.selectAllMenus(appCode)
+            : authorizationMapper.selectMenus(userId, appCode)) : List.of());
         result.setUserId(userId.toString());
         result.setDataScope(grant == null ? null : grant.getDataScope());
-        applyDataScope(result, user, grant, roles, accessible);
+        if (superAdmin) {
+            result.setAll(true);
+            result.setSelfOnly(false);
+            result.setDeptIds(List.of());
+        } else {
+            applyDataScope(result, user, grant, roles, accessible);
+        }
         return result;
     }
 
@@ -110,7 +136,19 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
 
     @Override
     public List<SysApp> listAccessibleApps(Long userId) {
+        if (isPlatformSuperAdmin(userId)) {
+            return appMapper.selectList(new LambdaQueryWrapper<SysApp>()
+                .eq(SysApp::getStatus, 1)
+                .ne(SysApp::getCode, WORKSPACE)
+                .orderByAsc(SysApp::getSortNo)
+                .orderByAsc(SysApp::getId));
+        }
         return authorizationMapper.selectAccessibleApps(userId);
+    }
+
+    private boolean isPlatformSuperAdmin(Long userId) {
+        return authorizationMapper.selectRoleCodes(userId, WORKSPACE)
+            .contains(SUPER_ADMIN);
     }
 
     private SysUserApp findGrant(Long userId, Long appId) {

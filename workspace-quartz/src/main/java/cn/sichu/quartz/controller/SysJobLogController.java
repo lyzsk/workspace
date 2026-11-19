@@ -1,7 +1,7 @@
 package cn.sichu.quartz.controller;
 
-import cn.sichu.common.result.PageResult;
-import cn.sichu.common.result.Result;
+import cn.sichu.common.core.result.PageResult;
+import cn.sichu.common.core.result.Result;
 import cn.sichu.quartz.model.query.SysJobQuery;
 import cn.sichu.quartz.model.vo.SysJobLogVO;
 import cn.sichu.quartz.service.IJobLogService;

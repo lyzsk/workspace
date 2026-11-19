@@ -1,6 +1,6 @@
 package cn.sichu.system.user.entity;
 
-import cn.sichu.common.base.TenantEntity;
+import cn.sichu.common.core.base.TenantEntity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,7 +1,7 @@
 package cn.sichu.system.online.controller;
 
-import cn.sichu.common.result.Result;
-import cn.sichu.common.log.annotation.Log;
+import cn.sichu.common.core.result.Result;
+import cn.sichu.common.core.log.annotation.Log;
 import cn.sichu.system.online.model.vo.SysOnlineUserVO;
 import cn.sichu.system.online.service.IOnlineUserService;
 import lombok.RequiredArgsConstructor;
