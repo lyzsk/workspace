@@ -23,6 +23,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -99,8 +100,11 @@ public class DashboardServiceImpl implements IDashboardService {
             percentChange(result.getTodayVisits(), lastWeekTodayVisits));
         result.setActiveUsersWeekChange(percentChange(result.getTodayUv(), lastWeekUv));
         result.setUsersWeekChange(percentChange(weekNewUsers, lastWeekNewUsers));
-        long apiCalls = sumApiCalls(now.minusDays(7), now);
-        long previousApiCalls = sumApiCalls(now.minusDays(14), now.minusDays(7));
+        LocalDateTime apiCallWeekStart = today.minusDays(6).atStartOfDay();
+        LocalDateTime apiCallHourEnd = now.truncatedTo(ChronoUnit.HOURS).plusHours(1);
+        long apiCalls = sumApiCalls(apiCallWeekStart, apiCallHourEnd);
+        long previousApiCalls = sumApiCalls(apiCallWeekStart.minusDays(7),
+            apiCallHourEnd.minusDays(7));
         result.setWeekApiCalls(apiCalls);
         result.setApiCallsWeekChange(percentChange(apiCalls, previousApiCalls));
 

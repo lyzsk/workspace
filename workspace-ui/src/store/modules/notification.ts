@@ -9,6 +9,7 @@ import {
     type MessageRow,
 } from "@/api/system/message";
 import { useUserStore } from "@/store/modules/user";
+import { getMe } from "@/api/auth";
 import { notifyDataChanged } from "@/utils/dataChange";
 
 export const useNotificationStore = defineStore("notification", () => {
@@ -79,9 +80,20 @@ export const useNotificationStore = defineStore("notification", () => {
             load();
         };
         socket.onerror = () => socket?.close();
-        socket.onclose = () => {
+        socket.onclose = async () => {
             connected.value = false;
-            scheduleReconnect();
+            // 被动断开时校验一次会话：被顶号或强退后请求层会 expire 并跳登录页，
+            // 不再带着已经失效的 token 无限重连。
+            if (!intentionalClose && userStore.isLogin) {
+                try {
+                    userStore.setUser(await getMe());
+                } catch {
+                    // 401 已由请求层处理
+                }
+            }
+            if (!intentionalClose && userStore.isLogin) {
+                scheduleReconnect();
+            }
         };
     }
 

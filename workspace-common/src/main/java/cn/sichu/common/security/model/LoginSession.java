@@ -10,5 +10,5 @@ import java.time.LocalDateTime;
 public record LoginSession(String sessionId, LoginUser loginUser,
                            LocalDateTime loginTime, LocalDateTime lastSeenAt,
                            LocalDateTime expiresAt, boolean revoked,
-                           LocalDateTime revokedAt) {
+                           LocalDateTime revokedAt, String ip, String userAgent) {
 }

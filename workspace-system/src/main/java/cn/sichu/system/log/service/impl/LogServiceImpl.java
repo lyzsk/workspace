@@ -122,16 +122,21 @@ public class LogServiceImpl extends BaseImpl<SysOperLogMapper, SysOperLog> imple
         SysOperLogVO vo = new SysOperLogVO();
         vo.setId(entry.getId() == null ? null : entry.getId().toString());
         vo.setUsername(entry.getUsername());
+        vo.setDeptName(entry.getDeptName());
         vo.setModule(entry.getModule());
         vo.setOperation(entry.getOperation());
+        vo.setMethod(entry.getMethod());
         vo.setRequestMethod(entry.getRequestMethod());
         vo.setRequestUri(entry.getRequestUri());
+        vo.setRequestQuery(entry.getRequestQuery());
         vo.setRequestParams(entry.getRequestParams());
         vo.setResponseResult(entry.getResponseResult());
         vo.setStatus(entry.getStatus());
         vo.setErrorMsg(entry.getErrorMsg());
+        vo.setErrorType(entry.getErrorType());
         vo.setCostTime(entry.getCostTime());
         vo.setIp(entry.getIp());
+        vo.setUserAgent(entry.getUserAgent());
         vo.setOperTime(entry.getOperTime());
         return vo;
     }

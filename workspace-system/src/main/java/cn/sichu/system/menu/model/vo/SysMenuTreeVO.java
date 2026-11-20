@@ -15,6 +15,8 @@ public class SysMenuTreeVO {
 
     private String id;
 
+    private String appCode;
+
     private String parentId;
 
     private String menuCode;

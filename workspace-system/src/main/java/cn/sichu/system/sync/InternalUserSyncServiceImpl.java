@@ -39,4 +39,10 @@ public class InternalUserSyncServiceImpl implements IInternalUserSyncService {
             updatedAfter, page, size, total);
         return PageResult.of(records, total, page, size);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InternalUserSyncVO findAuthorizedUser(String appCode, String username) {
+        return syncMapper.selectAuthorizedUser(appCode, username);
+    }
 }

@@ -112,15 +112,28 @@
             <el-descriptions :column="2" border>
                 <el-descriptions-item label="模块">{{ current?.module }}</el-descriptions-item>
                 <el-descriptions-item label="操作">{{ current?.operation }}</el-descriptions-item>
+                <el-descriptions-item v-if="current?.deptName" label="部门">{{ current.deptName }}</el-descriptions-item>
                 <el-descriptions-item label="请求方式">{{ current?.requestMethod }}</el-descriptions-item>
                 <el-descriptions-item label="请求地址">{{ current?.requestUri }}</el-descriptions-item>
                 <el-descriptions-item label="IP">{{ current?.ip }}</el-descriptions-item>
                 <el-descriptions-item label="耗时">{{ current?.costTime }} ms</el-descriptions-item>
+                <el-descriptions-item v-if="current?.method" label="调用方法" :span="2">
+                    <pre class="mono">{{ current.method }}</pre>
+                </el-descriptions-item>
+                <el-descriptions-item v-if="current?.requestQuery" label="Query 参数" :span="2">
+                    <pre class="mono">{{ current.requestQuery }}</pre>
+                </el-descriptions-item>
                 <el-descriptions-item label="参数" :span="2">
                     <pre class="mono">{{ current?.requestParams || "-" }}</pre>
                 </el-descriptions-item>
                 <el-descriptions-item label="返回" :span="2">
                     <pre class="mono">{{ current?.responseResult || "-" }}</pre>
+                </el-descriptions-item>
+                <el-descriptions-item v-if="current?.userAgent" label="User-Agent" :span="2">
+                    <pre class="mono">{{ current.userAgent }}</pre>
+                </el-descriptions-item>
+                <el-descriptions-item v-if="current?.errorType" label="异常类型" :span="2">
+                    <pre class="mono">{{ current.errorType }}</pre>
                 </el-descriptions-item>
                 <el-descriptions-item v-if="current?.errorMsg" label="错误" :span="2">
                     <pre class="mono">{{ current?.errorMsg }}</pre>

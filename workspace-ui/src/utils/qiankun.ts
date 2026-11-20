@@ -4,6 +4,7 @@ import type { ScopedAuthBridge, HostUserSummary } from "@/microfrontend/authBrid
 interface MicroApplicationOptions {
     name: string;
     path: string;
+    initialPath?: string;
     entry: string;
     styleEntry?: string;
     domElement: HTMLElement;
@@ -89,6 +90,7 @@ export async function mountMicroApplication(
                 props: {
                     domElement: options.domElement,
                     basePath: options.path,
+                    initialPath: options.initialPath,
                     appCode: options.appCode,
                     mode: "micro",
                     theme: options.theme,
@@ -100,7 +102,6 @@ export async function mountMicroApplication(
             },
             {
                 sandbox: true,
-                singular: true,
             },
         );
         await microApp.mountPromise;

@@ -2,6 +2,8 @@ package cn.sichu.system.log.aspect;
 
 import cn.sichu.common.core.utils.TextUtils;
 import cn.sichu.common.core.log.annotation.Log;
+import cn.sichu.system.security.mapper.AuthQueryMapper;
+import cn.sichu.system.auth.model.vo.UserOrgVO;
 import cn.sichu.system.log.entity.SysOperLog;
 import cn.sichu.system.log.service.ILogService;
 import cn.sichu.common.security.model.LoginUser;
@@ -17,6 +19,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +42,7 @@ public class OperLogAspect {
 
     private final ILogService logService;
     private final ObjectMapper objectMapper;
+    private final AuthQueryMapper authQueryMapper;
 
     @Around("@annotation(logAnnotation)")
     public Object around(ProceedingJoinPoint joinPoint, Log logAnnotation) throws Throwable {
@@ -69,21 +73,30 @@ public class OperLogAspect {
             entry.setUserId(loginUser.getUserId());
             entry.setUsername(loginUser.getUsername());
             entry.setTenantId(loginUser.getTenantId());
+            UserOrgVO org = authQueryMapper.selectUserOrg(loginUser.getUserId());
+            if (org != null) {
+                entry.setDeptName(org.deptName());
+            }
         } else {
             entry.setTenantId(0L);
         }
         entry.setModule(logAnnotation.module());
         entry.setOperation(logAnnotation.operation());
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        entry.setMethod(signature.getDeclaringTypeName() + "." + signature.getName());
         entry.setRequestMethod(WebRequestUtils.currentRequest() == null ? null
             : WebRequestUtils.currentRequest().getMethod());
         HttpServletRequest request = WebRequestUtils.currentRequest();
         entry.setRequestUri(request == null ? null : request.getRequestURI());
+        entry.setRequestQuery(request == null ? null : request.getQueryString());
         entry.setRequestParams(toJson(joinPoint.getArgs()));
         entry.setResponseResult(toJson(result));
         entry.setStatus(error == null ? 1 : 0);
         entry.setErrorMsg(error == null ? null : TextUtils.truncate(error.getMessage(), MAX_ERROR));
+        entry.setErrorType(error == null ? null : error.getClass().getName());
         entry.setCostTime(costTime);
         entry.setIp(WebRequestUtils.clientIp());
+        entry.setUserAgent(WebRequestUtils.userAgent());
         entry.setOperTime(LocalDateTime.now());
         logService.record(entry);
     }

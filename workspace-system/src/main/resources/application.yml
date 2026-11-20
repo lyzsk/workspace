@@ -17,6 +17,8 @@ workspace:
   session:
     idle-timeout: 30m
     absolute-timeout: ${SESSION_ABSOLUTE_TIMEOUT:12h}
+  security:
+    super-admin-assignee: ${SUPER_ADMIN_ASSIGNEE:superadmin}
   generator:
     enabled: false
   login:
@@ -29,6 +31,18 @@ workspace:
     title: Workspace System API
     version: 1.0.0
     server-url: /
+  internal-user-sync:
+    clients:
+      - app-code: eap-tool-service
+        token: ${EAP_SYNC_TOKEN:dev-only-eap-sync-token-change-me}
+  license:
+    enabled: ${LICENSE_ENABLED:true}
+    enforce: ${LICENSE_ENFORCE:true}
+    public-key: ${LICENSE_PUBLIC_KEY:}
+    file: ${LICENSE_FILE:license/license.json}
+    state-file: ${LICENSE_STATE_FILE:license/license.state.json}
+    host-id-file: ${LICENSE_HOST_ID_FILE:}
+    refresh-millis: ${LICENSE_REFRESH_MILLIS:60000}
 
 springdoc:
   default-flat-param-object: true

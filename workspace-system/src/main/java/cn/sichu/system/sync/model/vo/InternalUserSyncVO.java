@@ -24,5 +24,6 @@ public class InternalUserSyncVO {
     private Integer appStatus;
     private Integer grantStatus;
     private String passwordHash;
+    private String roleCodes;
     private LocalDateTime updatedAt;
 }

@@ -1,0 +1,32 @@
+{
+  "name": "micro-subapp-template",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "workspace 主应用的子应用接入模板，支持独立运行与 qiankun 微前端挂载两种形态",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "build:micro": "vue-tsc -b && vite build --mode micro",
+    "preview": "vite preview",
+    "serve:micro": "vite preview --mode micro --port 3010 --strictPort",
+    "type-check": "vue-tsc -b"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "axios": "^1.21.1",
+    "element-plus": "^2.14.8",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.44",
+    "vue-router": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/tsconfig": "^0.9.1",
+    "sass": "^1.108.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.6",
+    "vue-tsc": "^3.3.14"
+  }
+}

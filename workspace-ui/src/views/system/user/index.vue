@@ -448,7 +448,10 @@ async function exportData() {
 onMounted(async () => {
     load();
     deptOptions.value = await getDeptList();
-    roleOptions.value = await listRoles();
+    const roles = await listRoles();
+    roleOptions.value = userStore.user?.roles?.includes("SUPER_ADMIN")
+        ? roles
+        : roles.filter((role) => role.roleCode !== "SUPER_ADMIN");
 });
 </script>
 

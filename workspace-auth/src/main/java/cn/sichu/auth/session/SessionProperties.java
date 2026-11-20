@@ -21,4 +21,6 @@ public class SessionProperties {
     private Duration idleTimeout = Duration.ofMinutes(30);
 
     private Duration absoluteTimeout = Duration.ofHours(12);
+
+    private boolean singleSession = true;
 }

@@ -58,7 +58,8 @@ public class LoginSessionStore {
     public void recordActivity(String sessionId, LocalDateTime time) {
         find(sessionId).ifPresent(session -> save(
             new LoginSession(sessionId, session.loginUser(), session.loginTime(), time,
-                session.expiresAt(), session.revoked(), session.revokedAt())));
+                session.expiresAt(), session.revoked(), session.revokedAt(), session.ip(),
+                session.userAgent())));
     }
 
     public void delete(String sessionId) {

@@ -1,12 +1,12 @@
 # Workspace
 
-面向内部业务的平台：RuoYi 风格的后端权限与系统管理能力、Art Design Pro 风格的前端，以及可独立接入的微前端子应用。
+面向内部业务的统一工作台：RuoYi 风格的后端权限与系统管理能力、Art Design Pro 风格的前端，以及可独立接入的微前端子应用。
 
 ## 技术栈
 
 - Java 17, Spring Boot 3.5.16, Spring Cloud 2025.0.0, Spring Cloud Alibaba 2025.0.0.0, Spring Security 6, MyBatis-Plus 3.5.18.1, PostgreSQL 17, Redis, Maven 3.9+
 - Vue 3, Vite 8, TypeScript, Pinia, Vue Router, Element Plus, SCSS
-- qiankun 2.10.16, LogicFlow, Excalidraw, Spring WebSocket, Quartz, Velocity
+- qiankun 3.0.0-rc.22, LogicFlow, Excalidraw, Spring WebSocket, Quartz, Velocity
 - OpenFeign、Nacos、Spring Cloud Gateway
 - Knife4j 4.5.0, springdoc 2.8.9
 
@@ -27,12 +27,14 @@ workspace/
 
 依赖方向：`auth → common`；`system → {common, tool, quartz, generator}`；`tool → system`；`gateway` 独立启动，不依赖业务模块。
 
-认证模型：
+## 认证与会话
 
 - access token 为 HS256 JWT，只包含 `userId / sessionId / tokenVersion / exp`；
-- Redis 保存完整 `LoginUser` 会话，`login:user:<sessionId>`；
+- Redis 保存完整 `LoginUser` 会话，键为 `login:user:<sessionId>`；
 - 空闲超时由 Redis TTL 控制（30 分钟），绝对上限 12 小时；
-- 应用授权缓存在 `authz:<userId>:<appCode>`，子应用只读。
+- 同一账号默认只保留一个有效会话，新登录会替换旧会话，适配当前 PC 单端场景；
+- 应用授权缓存在 `authz:<userId>:<appCode>`，子应用只读；
+- 内部服务通过服务凭证访问用户同步接口，凭证不进入前端。
 
 ## 快速启动
 
@@ -50,29 +52,21 @@ workspace/
 完整结构维护在 `workspace-system/src/main/resources/db/migration/`。已有环境直接启动 `workspace-system`，Flyway 会补齐迁移：
 
 ```bash
-cd /c/Users/admin/dev/workspace
+cd workspace
 mvn -DskipTests package
 ```
 
-需要手工重建时，由 owner 先创建 schema，再按顺序执行 V1 起的迁移和 `sql/seed_user.sql`。
+需要手工重建时，先创建数据库与 `system` schema，再按版本顺序执行 V1 起的迁移和 `sql/seed_user.sql`。
 
 ### 3. 后端（三个进程）
 
 ```bash
-cd /c/Users/admin/dev/workspace
+cd workspace
 mvn -DskipTests package
 
-"/c/Program Files/Java/jdk-17.0.18/bin/java.exe" \
-  -jar workspace-system/target/workspace-system-1.0-exec.jar \
-  --spring.profiles.active=dev
-
-"/c/Program Files/Java/jdk-17.0.18/bin/java.exe" \
-  -jar workspace-auth/target/workspace-auth-1.0.jar \
-  --spring.profiles.active=dev
-
-"/c/Program Files/Java/jdk-17.0.18/bin/java.exe" \
-  -jar workspace-gateway/target/workspace-gateway-1.0.jar \
-  --spring.profiles.active=dev
+java -jar workspace-system/target/workspace-system-1.0-exec.jar --spring.profiles.active=dev
+java -jar workspace-auth/target/workspace-auth-1.0.jar --spring.profiles.active=dev
+java -jar workspace-gateway/target/workspace-gateway-1.0.jar --spring.profiles.active=dev
 ```
 
 - `workspace-system`：61114，注册名 `workspace-system`
@@ -84,7 +78,7 @@ mvn -DskipTests package
 ### 4. 前端
 
 ```bash
-cd /c/Users/admin/dev/workspace/workspace-ui
+cd workspace/workspace-ui
 npm install
 npm run dev
 ```
@@ -119,15 +113,24 @@ VITE_API_PROXY=http://localhost:61115
 
 ## 当前能力
 
-- JWT + Redis 统一认证：30 分钟 access token、30 分钟空闲退出、12 小时绝对会话、tokenVersion 撤销。
+- JWT + Redis 统一认证：30 分钟 access token、30 分钟空闲退出、12 小时绝对会话、tokenVersion 撤销、单会话替换。
 - 用户、角色、应用菜单、数据权限和按钮权限按应用隔离；同一 userId 可分别配置各应用授权。
-- 内置 admin、workspace 范围 SUPER_ADMIN、总公司只读保护，前后端双重约束。
+- 内置管理员账号和角色保护，前后端双重约束。
+- 微前端：qiankun HTML entry、原生 ESM 子应用、深链恢复、宿主与子应用双向路由同步、ready/error 处理、延迟骨架、应用级菜单虚拟分组。
+- 工作台：访问统计、近 7 日点击量、PV/UV、TOP 用户和部门分布；分析页支持自动刷新。
+- 审计与监控：登录日志、操作日志、在线用户、Redis 缓存监控；日志记录客户端 IP 与 User-Agent。
+- 子应用用户同步：按应用范围向已授权子应用同步用户、状态和角色，支持启动全量同步、定时同步和登录时补同步。
 - Quartz 任务与日志：Spring Bean Handler 注册、启动全量对账、提交后立即生效。
-- Generator：PostgreSQL 单表元数据、后端实体 /mapper/service/controller, form/query/vo, TS API/ 类型、Art 页面和菜单 SQL。
-- 微前端：qiankun HTML entry、配置注册、挂载/卸载、统一 AuthBridge 和后端运行权限校验。
+- Generator：PostgreSQL 单表元数据、后端实体 / mapper / service / controller、form/query/vo、TS API/类型、Art 页面和菜单 SQL。
 - 实时通知、附件、WebSocket 数据变更事件、多人协作文档。
 
-注意：历史 `/eap/src/micro.ts`、`/ws-test/src/micro.ts` 是 single-spa ESM 入口，不能直接作为 qiankun HTML entry；对应子应用和 `sys_app.module_entry` 需要在单独接入任务中迁移。
+## 微前端接入
+
+- 宿主使用 qiankun 3.0.0-rc.22，通过 HTML entry 加载子应用，支持 Vite 原生 ESM 子应用。
+- `sys_app.module_entry` 填写子应用入口页 HTML：开发环境如 `http://localhost:3010/`，生产环境如 `/ies/`；不要填 `micro.ts` 或 JS 模块地址。
+- `sys_app.style_entry` 仅在子应用单独产出 CSS 文件时填写；HTML 已包含样式时留空，避免重复加载。
+- 子应用需暴露 `bootstrap / mount / unmount` 生命周期，并遵守宿主下发的 `basePath`、`authBridge` 和路由事件契约。
+- 子应用入口脚本中的动态 `import` 必须使用绝对 URL（如 `window.location.origin + '/eap/micro/ies-micro.js'`），不要使用 `/...` 根路径；qiankun 3 的 classic script 沙箱以 blob 执行，根路径无法解析。
 
 ## 日志与 banner
 
@@ -136,13 +139,11 @@ VITE_API_PROXY=http://localhost:61115
 - 全量日志：`logs/workspace-system/workspace-system.log`
 - WARN/ERROR 日志：`logs/workspace-system/workspace-system-error.log`
 
-## SQL 文件
+## 数据库迁移
 
 - `workspace-system/src/main/resources/db/migration/V1__baseline.sql`：唯一完整结构基线。
-- `V2__generator_menu.sql`：Generator 菜单权限。
-- `V3__internal_user_sync.sql`：内部用户同步索引。
-- `V4__app_access_menu_parent.sql`：应用访问按钮父节点修正。
-- `V5__opaque_authentication.sql`：历史不透明认证元数据（表保留，当前 JWT 方案不再写入）。
-- `V6__app_scoped_authorization.sql`：角色应用归属、用户应用授权、数据范围覆盖及入口授权回填。
+- `V2` 起为按版本递增的增量迁移，不要跳过版本；以目录内文件为准。
 - `sql/seed_user.sql`：独立本地账号初始化。
 - `sql/README.md`：初始化与 migrator/运行账号职责说明。
+
+生产环境不要把数据库口令、服务凭证、运行数据或本地环境文件提交到仓库。

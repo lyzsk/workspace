@@ -26,6 +26,10 @@
         JOIN sys_app a ON a.id = ua.app_id AND a.is_deleted = 0
         JOIN sys_user u ON u.id = ua.user_id AND u.is_deleted = 0
         WHERE a.code = #{appCode} AND ua.is_deleted = 0
+    </sql>
+
+    <!-- 增量过滤只给列表/计数使用；单用户查询没有 updatedAfter 参数。 -->
+    <sql id="authorizedUserChangedAfter">
         <if test="updatedAfter != null">
             AND <include refid="authorizationChangedAt"/> &gt; #{updatedAfter}
         </if>
@@ -52,15 +56,58 @@
             a.status AS app_status,
             ua.status AS grant_status,
             u.password AS password_hash,
+            COALESCE((
+                SELECT string_agg(DISTINCT r.role_code, ',')
+                FROM sys_user_role ur
+                JOIN sys_role r ON r.id = ur.role_id AND r.app_id = a.id
+                    AND r.is_deleted = 0 AND r.status = 1
+                WHERE ur.user_id = u.id AND ur.is_deleted = 0
+            ), '') AS role_codes,
             <include refid="authorizationChangedAt"/> AS updated_at
         <include refid="authorizedUserFrom"/>
+        <include refid="authorizedUserChangedAfter"/>
         ORDER BY u.id
         LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="selectAuthorizedUser"
+            resultType="cn.sichu.system.sync.model.vo.InternalUserSyncVO">
+        SELECT
+            u.id AS workspace_user_id,
+            u.username,
+            u.real_name,
+            u.email,
+            u.mobile,
+            u.gender,
+            u.dept_id,
+            CASE WHEN u.status = 1 AND ua.status = 1 AND a.status = 1
+                AND (u.locked_until IS NULL OR u.locked_until &lt;= now()) AND EXISTS (
+                SELECT 1 FROM sys_user_role ur
+                JOIN sys_role r ON r.id = ur.role_id AND r.app_id = a.id
+                    AND r.is_deleted = 0 AND r.status = 1
+                WHERE ur.user_id = u.id AND ur.is_deleted = 0
+            ) THEN 1 ELSE 0 END AS status,
+            u.status AS user_status,
+            a.status AS app_status,
+            ua.status AS grant_status,
+            u.password AS password_hash,
+            COALESCE((
+                SELECT string_agg(DISTINCT r.role_code, ',')
+                FROM sys_user_role ur
+                JOIN sys_role r ON r.id = ur.role_id AND r.app_id = a.id
+                    AND r.is_deleted = 0 AND r.status = 1
+                WHERE ur.user_id = u.id AND ur.is_deleted = 0
+            ), '') AS role_codes,
+            <include refid="authorizationChangedAt"/> AS updated_at
+        <include refid="authorizedUserFrom"/>
+          AND u.username = #{username}
+        LIMIT 1
     </select>
 
     <select id="countAuthorizedUsers" resultType="long">
         SELECT COUNT(u.id)
         <include refid="authorizedUserFrom"/>
+        <include refid="authorizedUserChangedAfter"/>
     </select>
 
 </mapper>

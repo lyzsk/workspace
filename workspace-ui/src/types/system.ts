@@ -7,6 +7,7 @@ export interface PageResult<T> {
 
 export interface MenuNode {
     id: string;
+    appCode?: string;
     parentId: string;
     menuCode: string;
     menuName: string;
@@ -91,15 +92,20 @@ export interface OnlineUserRow {
 export interface OperLogRow {
     id: string;
     username: string;
+    deptName?: string;
     module: string;
     operation: string;
+    method?: string;
     requestMethod: string;
     requestUri: string;
+    requestQuery?: string;
     requestParams: string;
     responseResult: string;
     status: number;
     errorMsg: string;
+    errorType?: string;
     costTime: number;
     ip: string;
+    userAgent?: string;
     operTime: string;
 }

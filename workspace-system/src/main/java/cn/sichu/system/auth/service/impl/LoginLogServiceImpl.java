@@ -38,7 +38,8 @@ public class LoginLogServiceImpl implements ILoginLogService {
     private long lockMinutes;
 
     @Override
-    public void record(String username, boolean success, String message, Long userId) {
+    public void record(String username, boolean success, String message, Long userId, String ip,
+        String userAgent) {
         SysLoginLog entry = new SysLoginLog();
         entry.setTenantId(0L);
         entry.setUserId(userId);
@@ -48,8 +49,11 @@ public class LoginLogServiceImpl implements ILoginLogService {
         entry.setMessage(TextUtils.truncate(message, 500));
         entry.setLoginTime(LocalDateTime.now());
         try {
-            entry.setIp(TextUtils.truncate(WebRequestUtils.clientIp(), 64));
-            entry.setUserAgent(TextUtils.truncate(WebRequestUtils.userAgent(), 500));
+            entry.setIp(TextUtils.truncate(
+                ip != null && !ip.isBlank() ? ip : WebRequestUtils.clientIp(), 64));
+            entry.setUserAgent(TextUtils.truncate(
+                userAgent != null && !userAgent.isBlank() ? userAgent
+                    : WebRequestUtils.userAgent(), 500));
         } catch (Exception ignored) {
         }
         try {

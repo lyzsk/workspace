@@ -68,7 +68,9 @@
 }
 
 .sidebar-scroll {
-    height: calc(100% - 60px);
+    flex: 1;
+    height: auto;
+    min-height: 0;
 }
 
 .sidebar-scroll :deep(.el-scrollbar__bar.is-vertical) {
@@ -82,8 +84,8 @@
 }
 
 .sidebar .el-menu {
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
+    overflow: visible;
     border-right: 0;
     background: transparent;
     overscroll-behavior: contain;

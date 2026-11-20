@@ -36,11 +36,11 @@ async function load() {
     try {
         const stats = await getCacheStats();
         rows.value = [
-            { label: "缓存实现", value: "本机内存 ConcurrentHashMap" },
-            { label: "缓存条目数", value: stats.size },
-            { label: "命中次数", value: stats.hits },
-            { label: "未命中次数", value: stats.misses },
-            { label: "命中率", value: `${(stats.hitRate * 100).toFixed(2)}%` },
+            { label: "缓存实现", value: stats.engine },
+            { label: "当前库条目数", value: stats.size },
+            { label: "Redis 全局命中次数", value: stats.hits },
+            { label: "Redis 全局未命中次数", value: stats.misses },
+            { label: "Redis 全局命中率", value: `${(stats.hitRate * 100).toFixed(2)}%` },
         ];
     } finally {
         loading.value = false;

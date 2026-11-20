@@ -19,12 +19,14 @@ import cn.sichu.system.role.model.form.SysRoleForm;
 import cn.sichu.system.role.model.query.SysRoleQuery;
 import cn.sichu.system.role.model.vo.SysRoleVO;
 import cn.sichu.system.role.service.IRoleService;
+import cn.sichu.common.security.model.LoginUser;
 import cn.sichu.common.security.util.SecurityUtils;
 import cn.sichu.system.user.entity.SysUserRole;
 import cn.sichu.system.user.mapper.SysUserRoleMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -52,6 +54,9 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     private final SysMenuMapper menuMapper;
     private final cn.sichu.common.redis.cache.AuthorizationStore authorizationStore;
 
+    @Value("${workspace.security.super-admin-assignee:superadmin}")
+    private String superAdminAssignee;
+
     @Override
     public PageResult<SysRoleVO> page(SysRoleQuery query) {
         Page<SysRole> page = new Page<>(query.getPageNum(), query.getPageSize());
@@ -73,11 +78,14 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
     @Override
     public List<SysRoleVO> listActive(String appCode) {
         SysApp app = requireApp(appCode);
-        return roleMapper.selectList(
-            new LambdaQueryWrapper<SysRole>().eq(SysRole::getStatus, 1)
-                .eq(SysRole::getAppId, app.getId())
-                .orderByAsc(SysRole::getRoleSort).orderByAsc(SysRole::getId)).stream()
-            .map(this::toVO).toList();
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<SysRole>()
+            .eq(SysRole::getStatus, 1)
+            .eq(SysRole::getAppId, app.getId())
+            .orderByAsc(SysRole::getRoleSort).orderByAsc(SysRole::getId);
+        if (!canSeeSuperAdminRole()) {
+            wrapper.ne(SysRole::getRoleCode, "SUPER_ADMIN");
+        }
+        return roleMapper.selectList(wrapper).stream().map(this::toVO).toList();
     }
 
     @Override
@@ -194,6 +202,13 @@ public class RoleServiceImpl extends BaseImpl<SysRoleMapper, SysRole> implements
         if (roleMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(SystemCode.ROLE_CODE_EXISTS);
         }
+    }
+
+    private boolean canSeeSuperAdminRole() {
+        LoginUser current = SecurityUtils.getLoginUserOrNull();
+        return current != null && current.getRoles().contains("SUPER_ADMIN")
+            && current.getUsername() != null
+            && current.getUsername().equals(superAdminAssignee);
     }
 
     private void checkRoleAllowed(SysRole role) {

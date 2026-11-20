@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import type { EChartsOption } from "echarts";
 import CountTo from "@/components/core/text-effect/count-to/index.vue";
 import DashboardChart from "../components/DashboardChart.vue";
@@ -107,6 +107,7 @@ const emptyData: DashboardData = {
 };
 const data = ref<DashboardData>({ ...emptyData });
 const loading = ref(false);
+let timer: ReturnType<typeof setInterval> | undefined;
 const applicationBarOption = computed<EChartsOption>(() => ({
     animationDuration: 1000,
     grid: { left: 12, right: 12, top: 20, bottom: 10, containLabel: true },
@@ -169,14 +170,21 @@ function changeClass(value: number) {
     return value > 0 ? "change-up" : value < 0 ? "change-down" : "";
 }
 
-onMounted(async () => {
+async function load() {
     loading.value = true;
     try {
         data.value = await getDashboard();
     } finally {
         loading.value = false;
     }
+}
+
+onMounted(() => {
+    void load();
+    timer = setInterval(() => void load(), 60000);
 });
+
+onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped lang="scss" src="../dashboard.scss"></style>

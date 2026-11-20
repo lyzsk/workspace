@@ -4,9 +4,9 @@
 
 ## 初始化入口
 
-- 完整结构和基础种子：`workspace-admin/src/main/resources/db/migration/V1__baseline.sql`
+- 完整结构和基础种子：`workspace-system/src/main/resources/db/migration/V1__baseline.sql`
 - Generator 菜单权限：`V2__generator_menu.sql`
-- 本地 admin/test：`sql/seed_user.sql`（只存 BCrypt 哈希，不删除其他账号）
+- 本地测试账号：`sql/seed_user.sql`（只存 BCrypt 哈希，不删除其他账号）
 - 后续结构变化：新增递增迁移，不修改已发布旧版本。
 
 需要手工初始化时：
@@ -17,7 +17,7 @@
 
 "/c/Program Files/PostgreSQL/17/bin/psql.exe" \
   -h localhost -U workspace -d workspace -v ON_ERROR_STOP=1 \
-  -f workspace-admin/src/main/resources/db/migration/V1__baseline.sql
+  -f workspace-system/src/main/resources/db/migration/V1__baseline.sql
 
 "/c/Program Files/PostgreSQL/17/bin/psql.exe" \
   -h localhost -U workspace -d workspace -v ON_ERROR_STOP=1 \
@@ -100,8 +100,8 @@ Quartz 使用 RAMJobStore 时不需要 `QRTZ_*` 内部表。
 
 ## 初始化原则
 
-- SUPER_ADMIN 初始化平台菜单和按钮；
+- 平台管理角色初始化平台菜单和按钮；
 - 普通角色不因为拥有列表权限而自动获得增删改权限；
 - 应用访问权限由 `sys_app.access_permission` 对应菜单 BUTTON，再由管理员分配；
-- admin、SUPER_ADMIN、总公司为内置只读对象，前后端均禁止变更；
+- 内置管理员账号、平台管理角色和总公司为内置只读对象，前后端均禁止变更；
 - 业务模块复用平台用户、角色和菜单，不重复建设一套账号体系。

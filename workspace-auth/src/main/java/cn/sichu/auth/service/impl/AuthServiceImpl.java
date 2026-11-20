@@ -8,9 +8,12 @@ import cn.sichu.auth.model.vo.LoginAuthentication;
 import cn.sichu.auth.model.vo.LoginVO;
 import cn.sichu.auth.model.vo.UserInfoVO;
 import cn.sichu.auth.service.*;
+import cn.sichu.auth.session.LoginSessionLock;
 import cn.sichu.auth.session.SessionProperties;
 import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.license.LicenseState;
+import cn.sichu.common.license.LicenseStateStore;
 import cn.sichu.common.redis.cache.LoginSessionStore;
 import cn.sichu.common.security.model.LoginSession;
 import cn.sichu.common.security.model.LoginUser;
@@ -47,6 +50,8 @@ public class AuthServiceImpl implements IAuthService {
     private final RemoteLoginUserDetailsService userDetailsService;
     private final ServiceTokenProvider tokenProvider;
     private final SessionProperties sessionProperties;
+    private final LoginSessionLock loginSessionLock;
+    private final LicenseStateStore licenseStateStore;
 
     @Override
     public LoginAuthentication login(LoginForm form) {
@@ -54,25 +59,28 @@ public class AuthServiceImpl implements IAuthService {
             LoginUser user = (LoginUser)authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(form.username(), form.password()))
                 .getPrincipal();
+            assertLicenseAllows(user);
+            LoginAuthentication authentication = loginSessionLock.withLock(user.getUserId(), () -> {
+                if (sessionProperties.isSingleSession()) {
+                    sessionStore.deleteByUserId(user.getUserId());
+                }
+                return issue(user);
+            });
             loginLogService.resetLoginFailure(user.getUserId(), tokenProvider.serviceToken());
-            loginLogService.record(user.getUsername(), true, "登录成功", user.getUserId(),
-                tokenProvider.serviceToken());
-            return issue(user);
+            recordLogin(user.getUsername(), true, "登录成功", user.getUserId());
+            return authentication;
         } catch (LockedException e) {
-            loginLogService.record(form.username(), false, "账号已锁定", null,
-                tokenProvider.serviceToken());
+            recordLogin(form.username(), false, "账号已锁定", null);
             throw new BusinessException(ResultCode.FORBIDDEN, "账号已锁定，请稍后再试");
         } catch (DisabledException e) {
-            loginLogService.record(form.username(), false, "账号已停用", null,
-                tokenProvider.serviceToken());
+            recordLogin(form.username(), false, "账号已停用", null);
             throw new BusinessException(ResultCode.FORBIDDEN, "账号已停用");
         } catch (AuthenticationException e) {
             int failures =
                 loginLogService.increaseLoginFailure(form.username(), tokenProvider.serviceToken());
             String message = failures >= MAX_FAIL_COUNT ? "密码错误次数过多，账号已锁定 15 分钟" :
                 "用户名或密码错误";
-            loginLogService.record(form.username(), false, message, null,
-                tokenProvider.serviceToken());
+            recordLogin(form.username(), false, message, null);
             throw new BusinessException(ResultCode.UNAUTHORIZED, message);
         }
     }
@@ -93,8 +101,11 @@ public class AuthServiceImpl implements IAuthService {
             sessionStore.delete(sessionId);
             throw new TokenException("登录会话无效或已过期");
         }
-        sessionStore.recordActivity(sessionId, now);
         LoginUser fresh = userDetailsService.loadUserById(user.getUserId());
+        // 刷新时把最新权限写回会话，避免 getMe/system 继续读旧 LoginUser。
+        sessionStore.save(new LoginSession(sessionId, fresh, session.loginTime(), now,
+            session.expiresAt(), session.revoked(), session.revokedAt(), session.ip(),
+            session.userAgent()));
         String token = tokenService.createToken(fresh, sessionId);
         return new LoginAuthentication(new LoginVO(token, toUserInfo(fresh)), sessionId,
             session.expiresAt());
@@ -140,11 +151,34 @@ public class AuthServiceImpl implements IAuthService {
         sessionStore.deleteByUserId(userId);
     }
 
+    private void assertLicenseAllows(LoginUser user) {
+        LicenseState state = licenseStateStore.find().orElse(null);
+        // 状态缺失或 Redis 不可读时按失效处理；只保留应急管理员的恢复通道。
+        boolean blocked = state == null || state.getStatus() == null
+            || state.getStatus().isBlocked();
+        if (blocked && !isEmergencyAdmin(user)) {
+            throw new BusinessException(ResultCode.SERVICE_UNAVAILABLE,
+                "平台授权已失效，请联系管理员");
+        }
+    }
+
+    private boolean isEmergencyAdmin(LoginUser user) {
+        return user.getRoles() != null && user.getRoles().contains("SUPER_ADMIN");
+    }
+
+    private void recordLogin(String username, boolean success, String message, Long userId) {
+        ClientRequestMetadata client = ClientRequestMetadata.current();
+        loginLogService.record(username, success, message, userId, client.ip(), client.userAgent(),
+            tokenProvider.serviceToken());
+    }
+
     private LoginAuthentication issue(LoginUser user) {
         LocalDateTime now = LocalDateTime.now();
         String sessionId = UUID.randomUUID().toString();
+        ClientRequestMetadata client = ClientRequestMetadata.current();
         LoginSession session = new LoginSession(sessionId, user, now, now,
-            now.plus(sessionProperties.getAbsoluteTimeout()), false, null);
+            now.plus(sessionProperties.getAbsoluteTimeout()), false, null, client.ip(),
+            client.userAgent());
         sessionStore.save(session);
         String accessToken = tokenService.createToken(user, sessionId);
         return new LoginAuthentication(new LoginVO(accessToken, toUserInfo(user)), sessionId,

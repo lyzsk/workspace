@@ -80,20 +80,22 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
             throw new BusinessException(SystemCode.APP_NOT_FOUND);
         }
         SysUserApp grant = findGrant(userId, app.getId());
+        boolean workspace = WORKSPACE.equals(appCode);
         boolean superAdmin = isPlatformSuperAdmin(userId);
+        boolean activeGrant = grant != null && Objects.equals(grant.getStatus(), 1);
+        // 平台管理角色只旁路 workspace；业务应用仍必须显式授权。
         boolean baseAccessible = isActiveUser(user)
             && Objects.equals(app.getStatus(), 1)
-            && (superAdmin || grant != null && Objects.equals(grant.getStatus(), 1));
+            && (activeGrant || superAdmin && workspace);
         List<SysRole> roles = baseAccessible
             ? authorizationMapper.selectRoles(userId, appCode) : List.of();
-        boolean accessible = baseAccessible && (superAdmin || !roles.isEmpty());
+        boolean accessible = baseAccessible && (superAdmin && workspace || !roles.isEmpty());
         Set<String> roleCodes = roles.stream().map(SysRole::getRoleCode)
             .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
-        if (superAdmin) {
+        if (superAdmin && workspace) {
             roleCodes.add(SUPER_ADMIN);
         }
-        boolean allPermissions = superAdmin
-            || accessible && WORKSPACE.equals(appCode) && roleCodes.contains(SUPER_ADMIN);
+        boolean allPermissions = accessible && superAdmin && workspace;
         Set<String> permissions = Set.of();
         if (accessible) {
             permissions = allPermissions
@@ -111,7 +113,7 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
             : authorizationMapper.selectMenus(userId, appCode)) : List.of());
         result.setUserId(userId.toString());
         result.setDataScope(grant == null ? null : grant.getDataScope());
-        if (superAdmin) {
+        if (superAdmin && workspace) {
             result.setAll(true);
             result.setSelfOnly(false);
             result.setDeptIds(List.of());
@@ -136,13 +138,7 @@ public class AppAuthorizationServiceImpl implements IAppAuthorizationService {
 
     @Override
     public List<SysApp> listAccessibleApps(Long userId) {
-        if (isPlatformSuperAdmin(userId)) {
-            return appMapper.selectList(new LambdaQueryWrapper<SysApp>()
-                .eq(SysApp::getStatus, 1)
-                .ne(SysApp::getCode, WORKSPACE)
-                .orderByAsc(SysApp::getSortNo)
-                .orderByAsc(SysApp::getId));
-        }
+        // 入口列表同样不允许平台管理角色绕过业务应用授权。
         return authorizationMapper.selectAccessibleApps(userId);
     }
 

@@ -1,0 +1,5 @@
+keys/
+keys-*/
+*.key
+license.json
+revoked.json

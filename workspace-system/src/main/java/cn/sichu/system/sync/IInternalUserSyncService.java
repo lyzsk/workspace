@@ -14,4 +14,6 @@ public interface IInternalUserSyncService {
 
     PageResult<InternalUserSyncVO> pageAuthorizedUsers(String appCode, LocalDateTime updatedAfter,
         long page, int size);
+
+    InternalUserSyncVO findAuthorizedUser(String appCode, String username);
 }

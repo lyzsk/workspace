@@ -43,14 +43,18 @@ public class SysOperLogController {
     public void export(@Valid SysOperLogQuery query,
         @RequestParam(defaultValue = "xlsx") String format, HttpServletResponse response)
         throws IOException {
-        List<String> headers =
-            List.of("模块", "操作", "用户", "状态", "耗时(ms)", "IP", "操作时间", "错误信息");
+        List<String> headers = List.of("模块", "操作", "用户", "部门", "调用方法", "请求地址",
+            "Query 参数", "请求参数", "返回结果", "状态", "耗时(ms)", "IP", "User-Agent", "操作时间",
+            "异常类型", "错误信息");
         List<List<String>> rows = logService.listOperLogs(query).stream().map(
             log -> List.of(safe(log.getModule()), safe(log.getOperation()), safe(log.getUsername()),
+                safe(log.getDeptName()), safe(log.getMethod()), safe(log.getRequestUri()),
+                safe(log.getRequestQuery()), safe(log.getRequestParams()),
+                safe(log.getResponseResult()),
                 log.getStatus() != null && log.getStatus() == 1 ? "成功" : "失败",
                 log.getCostTime() == null ? "" : log.getCostTime().toString(), safe(log.getIp()),
-                DateTimeUtils.format(log.getOperTime()),
-                safe(log.getErrorMsg()))).toList();
+                safe(log.getUserAgent()), DateTimeUtils.format(log.getOperTime()),
+                safe(log.getErrorType()), safe(log.getErrorMsg()))).toList();
         if ("csv".equalsIgnoreCase(format)) {
             CsvUtils.write(response, "oper-logs.csv", headers, rows);
         } else {

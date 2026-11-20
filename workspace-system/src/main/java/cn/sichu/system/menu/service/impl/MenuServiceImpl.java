@@ -40,7 +40,12 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
 
     @Override
     public List<SysMenuTreeVO> tree(boolean includeButtons) {
-        return tree(includeButtons, "workspace");
+        LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<SysMenu>()
+            .orderByAsc(SysMenu::getSortNo).orderByAsc(SysMenu::getId);
+        if (!includeButtons) {
+            wrapper.in(SysMenu::getMenuType, TYPE_DIR, TYPE_MENU);
+        }
+        return buildTree(menuMapper.selectList(wrapper));
     }
 
     @Override
@@ -77,41 +82,30 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
 
     private void appendRegisteredApps(List<SysMenuTreeVO> tree, LoginUser loginUser) {
         List<SysApp> apps = authorizationService.listAccessibleApps(loginUser.getUserId());
-        if (apps.isEmpty()) {
-            return;
-        }
-        SysMenuTreeVO root = tree.stream().filter(node -> "apps".equals(node.getMenuCode()))
-            .findFirst().orElse(null);
-        if (root == null) {
-            root = new SysMenuTreeVO();
-            root.setId("apps-root");
-            root.setParentId("0");
-            root.setMenuCode("apps");
-            root.setMenuName("应用管理");
-            root.setMenuType(TYPE_DIR);
-            root.setPath("/apps");
-            root.setSortNo(100);
-            root.setHidden(1);
-            root.setStatus(1);
-            tree.add(root);
-        }
         for (SysApp app : apps) {
             if (app.getBasePath() == null || app.getBasePath().isBlank()) {
                 continue;
             }
-            SysMenuTreeVO child = new SysMenuTreeVO();
-            child.setId("app-" + app.getCode());
-            child.setParentId(root.getId());
-            child.setMenuCode("app:" + app.getCode());
-            child.setMenuName(app.getName());
-            child.setMenuType(TYPE_MENU);
-            child.setPath(app.getBasePath());
-            child.setComponent("apps/detail/MicroFrontendHost");
-            child.setIcon(app.getIcon());
-            child.setSortNo(app.getSortNo());
-            child.setHidden(1);
-            child.setStatus(1);
-            root.getChildren().add(child);
+            SysMenuTreeVO appNode = new SysMenuTreeVO();
+            appNode.setId("app-" + app.getCode());
+            appNode.setAppCode(app.getCode());
+            appNode.setParentId("0");
+            appNode.setMenuCode("app:" + app.getCode());
+            appNode.setMenuName(app.getName());
+            appNode.setMenuType(TYPE_MENU);
+            appNode.setPath(app.getBasePath());
+            appNode.setComponent("apps/detail/MicroFrontendHost");
+            appNode.setIcon(app.getIcon());
+            appNode.setSortNo(app.getSortNo());
+            appNode.setHidden(1);
+            appNode.setStatus(1);
+            List<SysMenuTreeVO> appMenus = authorizationService.getAuthorization(
+                loginUser.getUserId(), app.getCode()).getMenus();
+            if (appMenus != null && !appMenus.isEmpty()) {
+                appNode.setMenuType(TYPE_DIR);
+                appNode.getChildren().addAll(appMenus);
+            }
+            tree.add(appNode);
         }
     }
 
@@ -241,6 +235,7 @@ public class MenuServiceImpl extends BaseImpl<SysMenuMapper, SysMenu> implements
     private SysMenuTreeVO toVO(SysMenu menu) {
         SysMenuTreeVO vo = new SysMenuTreeVO();
         vo.setId(menu.getId() == null ? null : menu.getId().toString());
+        vo.setAppCode(menu.getAppCode());
         vo.setParentId(menu.getParentId() == null ? "0" : menu.getParentId().toString());
         vo.setMenuCode(menu.getMenuCode());
         vo.setMenuName(menu.getMenuName());

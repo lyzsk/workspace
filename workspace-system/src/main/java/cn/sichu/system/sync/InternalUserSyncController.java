@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,5 +33,12 @@ public class InternalUserSyncController {
         @RequestParam(defaultValue = "100") int size) {
         return Result.success(
             syncService.pageAuthorizedUsers(authentication.getName(), updatedAfter, page, size));
+    }
+
+    @GetMapping("/sync/{username}")
+    public Result<InternalUserSyncVO> syncOne(Authentication authentication,
+        @PathVariable String username) {
+        return Result.success(
+            syncService.findAuthorizedUser(authentication.getName(), username));
     }
 }

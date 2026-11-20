@@ -17,6 +17,7 @@ export interface ServerInfo {
 }
 
 export interface CacheStats {
+    engine: string;
     size: number;
     hits: number;
     misses: number;
@@ -26,7 +27,7 @@ export interface CacheStats {
 export interface CacheEntry {
     key: string;
     value: string;
-    updateTime: string;
+    ttlSeconds: number;
 }
 
 export function getServerInfo() {

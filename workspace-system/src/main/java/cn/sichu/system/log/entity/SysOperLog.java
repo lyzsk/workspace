@@ -25,9 +25,13 @@ public class SysOperLog {
 
     private String username;
 
+    private String deptName;
+
     private String module;
 
     private String operation;
+
+    private String method;
 
     private String requestMethod;
 
@@ -35,15 +39,21 @@ public class SysOperLog {
 
     private String requestParams;
 
+    private String requestQuery;
+
     private String responseResult;
 
     private Integer status;
 
     private String errorMsg;
 
+    private String errorType;
+
     private Long costTime;
 
     private String ip;
+
+    private String userAgent;
 
     private LocalDateTime operTime;
 }

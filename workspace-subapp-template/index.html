@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>子应用模板</title>
+    <style>
+      /* 首屏底色，避免加载瞬间白闪。微前端下会被主应用容器覆盖 */
+      html {
+        background-color: #fafbfc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!--
+      入口固定为 main.ts：
+      - 独立运行时，main.ts 自行挂载
+      - 被主应用挂载时，main.ts 导出 qiankun 生命周期，由宿主调用
+    -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

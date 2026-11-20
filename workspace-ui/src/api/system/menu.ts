@@ -28,6 +28,14 @@ export function getMenuTree(includeButtons = false, appCode = "workspace") {
     });
 }
 
+export function getAllMenuTree(includeButtons = false) {
+    return request<MenuNode[]>({
+        url: "/system/menus/tree/all",
+        method: "get",
+        params: { includeButtons },
+    });
+}
+
 export function createMenu(data: MenuForm) {
     return request<string>({ url: "/system/menus", method: "post", data });
 }

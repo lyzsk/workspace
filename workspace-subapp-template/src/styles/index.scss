@@ -1,0 +1,186 @@
+/**
+ * 子应用基础样式。
+ *
+ * 有一条硬规则：这个文件里不允许出现 html、body、* 这类全局选择器。
+ * 子应用和主应用共用同一个文档，全局选择器会直接改写主应用的样式，
+ * 而且这类问题在开发期往往看不出来，等主应用某个页面突然变形才发现。
+ *
+ * 所有样式统一收在 .sub-app-root 下面。
+ *
+ * 视觉上对照主应用的「用户管理」一类页面：搜索卡片在上、表格卡片在下，
+ * 两者都是描边 + 圆角 + 轻投影的白卡，页面容器用 12px 间距分隔。
+ */
+
+.sub-app-root {
+    // 容器内的盒模型重置。带作用域前缀，不会影响主应用
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    /**
+     * 页面底色。
+     *
+     * 不能直接用 --el-bg-color-page：那是 Element Plus 的取值（明亮 #f2f3f5），
+     * 与主应用页面底色（#fafbfc）不是一个色，嵌进去会看到子应用区域明显发灰。
+     *
+     * 主应用在 :root 上定义了 --app-bg，子应用与它同处一个文档，变量会继承下来，
+     * 优先跟随宿主；独立运行时没有这个变量，退回到模板自己的取值。
+     */
+    --sub-app-page-bg: var(--app-bg, #fafbfc);
+
+    min-height: 100%;
+    color: var(--el-text-color-primary, #303133);
+    background-color: var(--sub-app-page-bg);
+
+    // 暗色下只覆盖自定义样式部分，Element Plus 变量由主应用统一管理
+    &[data-theme="dark"] {
+        --sub-app-page-bg: var(--app-bg, #0a0a0a);
+    }
+
+    /**
+     * 内边距只在独立运行时保留。
+     *
+     * 嵌入宿主时，内容区的外层留白由宿主的布局决定，
+     * 子应用再加一层会和宿主的间距叠在一起，四周出现一圈多余空白。
+     */
+    &[data-mode="standalone"] {
+        padding: 16px;
+    }
+
+    /** 页面级容器，业务页面统一用这个类包住内容 */
+    .page-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /**
+     * 搜索卡片，对应主应用的 .search-card。
+     * 描边、圆角、轻投影三件套保持一致，字段标签放在控件上方，按钮靠右。
+     */
+    .page-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 10px;
+        padding: 16px 18px;
+        border: 1px solid var(--border, #e4e7ed);
+        border-radius: 7px;
+        background-color: var(--panel-bg, #ffffff);
+        box-shadow:
+            0 1px 2px 0 rgb(0 0 0 / 3%),
+            0 1px 1px -1px rgb(0 0 0 / 8%);
+    }
+
+    /** 搜索字段：标签在上，控件在下 */
+    .search-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .search-label {
+        color: var(--text-muted, #7987a1);
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    /** 搜索卡片右侧的按钮组，靠右对齐 */
+    .search-actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    /** 单行工具条里的说明文字，靠右 */
+    .toolbar-hint {
+        margin-left: auto;
+        font-size: 13px;
+        color: var(--text-muted, #909399);
+    }
+
+    /** 表格工具行里的说明文字，按正常流排列，不往右推 */
+    .table-hint {
+        font-size: 13px;
+        color: var(--text-muted, #909399);
+    }
+
+    /**
+     * 表格卡片，对应主应用的 .table-card。
+     * 内部自带内边距，顶部留工具行，底部放分页。
+     */
+    .page-body {
+        flex: 1;
+        min-height: 0;
+        padding: 16px 18px 18px;
+        border: 1px solid var(--border, #e4e7ed);
+        border-radius: 8px;
+        background-color: var(--panel-bg, #ffffff);
+        box-shadow:
+            0 1px 2px 0 rgb(0 0 0 / 3%),
+            0 1px 1px -1px rgb(0 0 0 / 8%);
+    }
+
+    /** 表格卡片顶部一行：左侧放说明或操作，右侧放刷新之类的图标按钮 */
+    .table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .table-toolbar-left,
+    .table-toolbar-right {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .table-pagination {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+    }
+
+    /**
+     * 分页按钮，照主应用的 .table-pagination 处理：
+     * 底色透明、描边用分隔线色，当前页用主色填充。
+     */
+    .table-pagination .el-pagination.is-background .btn-prev,
+    .table-pagination .el-pagination.is-background .btn-next,
+    .table-pagination .el-pagination.is-background .el-pager li {
+        border: 1px solid var(--border, #e4e7ed);
+        background: transparent;
+    }
+
+    .table-pagination .el-pagination.is-background .el-pager li.is-active {
+        border-color: var(--primary, #5d87ff);
+        background: var(--primary, #5d87ff);
+        color: #ffffff;
+    }
+
+    /**
+     * 表格外观与主应用保持一致。
+     *
+     * 主应用用 .table-card 包一层带描边的卡片，表头取页面底色、表头文字加重、表格圆角 10px；
+     * 子应用照同一套 token 走，两边的表格看上去才是同一个系统。
+     *
+     * 这些规则必须收在 .sub-app-root 下面：接入方如果不启用样式隔离，
+     * 裸露的 .el-table 选择器会直接改写主应用表格的样式。
+     */
+    .el-table {
+        --el-table-header-bg-color: var(--app-bg, #fafbfc);
+        --el-table-row-hover-bg-color: var(--slider-bg, #f2f4f5);
+        --el-table-border-color: var(--border, #ebeef5);
+        border-radius: 10px;
+    }
+
+    .el-table th.el-table__cell {
+        color: var(--text, #383853);
+        font-weight: 600;
+    }
+}

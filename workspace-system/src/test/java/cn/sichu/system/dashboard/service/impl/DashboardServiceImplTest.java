@@ -1,5 +1,6 @@
 package cn.sichu.system.dashboard.service.impl;
 
+import cn.sichu.common.redis.cache.CacheKeys;
 import cn.sichu.common.redis.cache.LoginSessionStore;
 import cn.sichu.common.security.model.LoginSession;
 import cn.sichu.common.security.model.LoginUser;
@@ -20,6 +21,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,9 +86,9 @@ class DashboardServiceImplTest {
         when(second.getUserId()).thenReturn(2L);
         LocalDateTime now = LocalDateTime.now();
         when(sessionStore.listAll()).thenReturn(List.of(
-            new LoginSession("s1", first, now, now, now.plusHours(1), false, null),
-            new LoginSession("s2", first, now, now, now.plusHours(1), false, null),
-            new LoginSession("s3", second, now, now, now.plusHours(1), false, null)));
+            new LoginSession("s1", first, now, now, now.plusHours(1), false, null, null, null),
+            new LoginSession("s2", first, now, now, now.plusHours(1), false, null, null, null),
+            new LoginSession("s3", second, now, now, now.plusHours(1), false, null, null, null)));
         when(dashboardMapper.selectDailyVisits(any(), any())).thenReturn(List.of());
         when(dashboardMapper.selectDailyNewUsers(any(), any())).thenReturn(List.of());
         when(dashboardMapper.selectAppVisits(any(), any())).thenReturn(List.of());
@@ -98,5 +100,24 @@ class DashboardServiceImplTest {
 
         assertEquals(2, result.getOnlineUsers());
         assertEquals(7, result.getWeekTrend().size());
+    }
+
+    @Test
+    void includesCurrentHourInWeekApiCalls() {
+        LocalDateTime now = LocalDateTime.now();
+        String currentHour = now.format(DateTimeFormatter.ofPattern("yyyyMMddHH"));
+        when(redisValues.get(CacheKeys.apiRequestHour(currentHour))).thenReturn("5");
+        when(sessionStore.listAll()).thenReturn(List.of());
+        when(dashboardMapper.selectDailyVisits(any(), any())).thenReturn(List.of());
+        when(dashboardMapper.selectDailyNewUsers(any(), any())).thenReturn(List.of());
+        when(dashboardMapper.selectAppVisits(any(), any())).thenReturn(List.of());
+        when(dashboardMapper.selectTopUsers(any(), any())).thenReturn(List.of());
+        when(dashboardMapper.selectUserDepartments()).thenReturn(List.of());
+        when(dashboardMapper.selectAppDepartments(any(), any())).thenReturn(List.of());
+
+        DashboardVO result = service.summary();
+
+        assertEquals(5, result.getWeekApiCalls());
+        assertEquals(5, result.getApiCallTrend().get(6).getValue());
     }
 }

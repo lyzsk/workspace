@@ -101,6 +101,40 @@ class AppAuthorizationServiceImplTest {
     }
 
     @Test
+    void platformAdminCannotEnterBusinessAppWithoutGrant() {
+        when(authorizationMapper.selectRoleCodes(1L, "workspace"))
+            .thenReturn(Set.of("SUPER_ADMIN"));
+        when(userAppMapper.selectOne(any())).thenReturn(null);
+
+        AppAuthorizationVO result = service.getAuthorization(1L, "app-a");
+
+        assertFalse(result.isAccessible());
+        assertTrue(result.getRoles().isEmpty());
+        assertTrue(result.getPermissions().isEmpty());
+        assertTrue(result.getMenus().isEmpty());
+    }
+
+    @Test
+    void platformAdminKeepsWorkspaceBypassWithoutGrant() {
+        SysApp workspace = app();
+        workspace.setCode("workspace");
+        when(appMapper.selectOne(any())).thenReturn(workspace);
+        when(userAppMapper.selectOne(any())).thenReturn(null);
+        when(authorizationMapper.selectRoleCodes(1L, "workspace"))
+            .thenReturn(Set.of("SUPER_ADMIN"));
+        when(authorizationMapper.selectAllPermissions("workspace"))
+            .thenReturn(Set.of("sys:user:list"));
+        when(authorizationMapper.selectAllMenus("workspace")).thenReturn(List.of(menu()));
+
+        AppAuthorizationVO result = service.getAuthorization(1L, "workspace");
+
+        assertTrue(result.isAccessible());
+        assertTrue(result.getRoles().contains("SUPER_ADMIN"));
+        assertTrue(result.isAll());
+        assertEquals(Set.of("sys:user:list"), result.getPermissions());
+    }
+
+    @Test
     void userGrantDataScopeOverridesRoleScope() {
         grant.setDataScope(2);
         when(authorizationMapper.selectRoles(1L, "app-a")).thenReturn(List.of(role(1)));

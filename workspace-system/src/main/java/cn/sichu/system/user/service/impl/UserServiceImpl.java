@@ -4,6 +4,7 @@ import cn.sichu.common.core.exception.BusinessException;
 import cn.sichu.common.core.result.PageResult;
 import cn.sichu.common.core.result.ResultCode;
 import cn.sichu.common.core.utils.QuerySortUtils;
+import cn.sichu.common.redis.cache.AuthorizationStore;
 import cn.sichu.system.app.entity.SysApp;
 import cn.sichu.system.app.grant.entity.SysUserApp;
 import cn.sichu.system.app.grant.mapper.SysUserAppMapper;
@@ -34,6 +35,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import cn.sichu.common.core.base.BaseImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +65,10 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     private final SysRoleMapper roleMapper;
     private final SysUserAppMapper userAppMapper;
     private final AuthQueryMapper authQueryMapper;
+    private final AuthorizationStore authorizationStore;
+
+    @Value("${workspace.security.super-admin-assignee:superadmin}")
+    private String superAdminAssignee;
 
     @Override
     @cn.sichu.system.security.datascope.DataScope(appCode = "workspace")
@@ -78,7 +84,8 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
     @Override
     public SysUserPageVO get(Long id) {
         SysUser user = baseMapper.selectById(id);
-        if (user == null) {
+        if (user == null
+            || (isSuperAdminAccount(user) && !isCurrentSuperAdminAssignee())) {
             throw new BusinessException(SystemCode.USER_NOT_FOUND);
         }
         assertVisible(user);
@@ -116,7 +123,10 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         if (user == null) {
             throw new BusinessException(SystemCode.USER_NOT_FOUND);
         }
-        checkUserAllowed(user);
+        checkUserManageable(user);
+        if (isSuperAdminAccount(user) && form.getStatus() != null && form.getStatus() == 0) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "不能停用超级管理员");
+        }
         assertVisible(user);
 
         Long count = baseMapper.selectCount(
@@ -143,6 +153,8 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         if (form.getRoleIds() != null) {
             saveRoles(id, form.getRoleIds(), user.getTenantId());
         }
+        // 角色、状态或资料变化后，当前用户在所有应用的有效授权都需要重新计算。
+        authorizationStore.deleteUser(id);
         if (passwordChanged || disabled) {
             authTokenStore.revokeAllSessions(id);
         }
@@ -155,7 +167,7 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         if (user == null) {
             throw new BusinessException(SystemCode.USER_NOT_FOUND);
         }
-        checkUserAllowed(user);
+        checkUserDeletable(user);
         assertVisible(user);
 
         LambdaUpdateWrapper<SysUser> wrapper = new LambdaUpdateWrapper<>();
@@ -166,6 +178,7 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         baseMapper.update(null, wrapper);
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, id));
         userAppMapper.delete(new LambdaQueryWrapper<SysUserApp>().eq(SysUserApp::getUserId, id));
+        authorizationStore.deleteUser(id);
         authTokenStore.revokeAllSessions(id);
     }
 
@@ -193,6 +206,9 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
                 SysUser::getUsername, query.getUsername())
             .eq(query.getGender() != null, SysUser::getGender, query.getGender())
             .eq(query.getStatus() != null, SysUser::getStatus, query.getStatus());
+        if (!isCurrentSuperAdminAssignee() && StringUtils.hasText(superAdminAssignee)) {
+            wrapper.ne(SysUser::getUsername, superAdminAssignee);
+        }
         boolean sorted = QuerySortUtils.apply(wrapper, query.getSortBy(), query.getOrder(),
             Map.of(
                 "username", SysUser::getUsername,
@@ -230,10 +246,23 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         });
     }
 
-    private void checkUserAllowed(SysUser user) {
+    private void checkUserManageable(SysUser user) {
         if (PROTECTED_USER_ID.equals(user.getId())) {
             throw new BusinessException(SystemCode.USER_PROTECTED);
         }
+        if (isSuperAdminAccount(user) && !isCurrentSuperAdminAssignee()) {
+            throw new BusinessException(SystemCode.USER_PROTECTED);
+        }
+    }
+
+    private void checkUserDeletable(SysUser user) {
+        if (PROTECTED_USER_ID.equals(user.getId()) || isSuperAdminAccount(user)) {
+            throw new BusinessException(SystemCode.USER_PROTECTED);
+        }
+    }
+
+    private boolean isSuperAdminAccount(SysUser user) {
+        return user.getUsername() != null && user.getUsername().equals(superAdminAssignee);
     }
 
     private void assertVisible(SysUser user) {
@@ -337,8 +366,9 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
             if (!Objects.equals(role.getStatus(), 1)) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "不能分配已停用角色");
             }
-            if ("SUPER_ADMIN".equals(role.getRoleCode()) && !isCurrentSuperAdmin()) {
-                throw new BusinessException(ResultCode.FORBIDDEN, "无权分配超级管理员角色");
+            if ("SUPER_ADMIN".equals(role.getRoleCode())
+                && !isCurrentSuperAdminAssignee()) {
+                throw new BusinessException(ResultCode.FORBIDDEN, "只有指定的超级管理员可以分配 SUPER_ADMIN 角色");
             }
         }
         for (Long roleId : requested) {
@@ -372,9 +402,11 @@ public class UserServiceImpl extends BaseImpl<SysUserMapper, SysUser> implements
         }
     }
 
-    private boolean isCurrentSuperAdmin() {
+    private boolean isCurrentSuperAdminAssignee() {
         var current = SecurityUtils.getLoginUserOrNull();
-        return current != null && current.getRoles().contains("SUPER_ADMIN");
+        return current != null && current.getRoles().contains("SUPER_ADMIN")
+            && current.getUsername() != null
+            && current.getUsername().equals(superAdminAssignee);
     }
 
     private void applyForm(SysUser user, SysUserForm form) {

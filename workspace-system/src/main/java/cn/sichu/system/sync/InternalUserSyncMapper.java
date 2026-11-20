@@ -15,6 +15,9 @@ import java.util.List;
 @Mapper
 public interface InternalUserSyncMapper {
 
+    InternalUserSyncVO selectAuthorizedUser(@Param("appCode") String appCode,
+        @Param("username") String username);
+
     List<InternalUserSyncVO> selectAuthorizedUsers(@Param("appCode") String appCode,
         @Param("updatedAfter") LocalDateTime updatedAfter, @Param("offset") long offset,
         @Param("size") int size);

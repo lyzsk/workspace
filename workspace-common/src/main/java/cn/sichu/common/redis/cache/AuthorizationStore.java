@@ -54,4 +54,12 @@ public class AuthorizationStore {
             cursor.forEachRemaining(redisTemplate::delete);
         }
     }
+
+    public void deleteUser(Long userId) {
+        try (var cursor = redisTemplate.scan(
+            ScanOptions.scanOptions().match(CacheKeys.authorizationUserPattern(userId)).count(100)
+                .build())) {
+            cursor.forEachRemaining(redisTemplate::delete);
+        }
+    }
 }

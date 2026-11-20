@@ -3,6 +3,7 @@ package cn.sichu.common.core.exception;
 import cn.sichu.common.core.result.IResultCode;
 import cn.sichu.common.core.result.Result;
 import cn.sichu.common.core.result.ResultCode;
+import cn.sichu.common.security.token.TokenException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -27,6 +28,13 @@ public class GlobalExceptionHandler {
         IResultCode code = e.getResultCode();
         log.warn("业务异常 code={} msg={}", code.getCode(), e.getMessage());
         return ResponseEntity.status(code.getCode()).body(Result.failed(code, e.getMessage()));
+    }
+
+    @ExceptionHandler(TokenException.class)
+    public ResponseEntity<Result<Void>> handleTokenException(TokenException e) {
+        log.warn("登录凭证无效: {}", e.getMessage());
+        return ResponseEntity.status(ResultCode.UNAUTHORIZED.getCode())
+            .body(Result.failed(ResultCode.UNAUTHORIZED, e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

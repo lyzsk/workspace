@@ -45,6 +45,13 @@ public class SysMenuController {
         return Result.success(menuService.tree(includeButtons, appCode));
     }
 
+    @GetMapping("/tree/all")
+    @PreAuthorize("@ss.hasPerm('sys:menu:list')")
+    public Result<List<SysMenuTreeVO>> allTrees(
+        @RequestParam(defaultValue = "false") boolean includeButtons) {
+        return Result.success(menuService.tree(includeButtons));
+    }
+
     @PostMapping
     @PreAuthorize("@ss.hasPerm('sys:menu:create')")
     @Log(module = "菜单管理", operation = "新增菜单")

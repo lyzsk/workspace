@@ -17,6 +17,8 @@ public interface IRemoteLoginLogService {
     void record(@RequestParam("username") String username, @RequestParam("success") boolean success,
         @RequestParam("message") String message,
         @RequestParam(value = "userId", required = false) Long userId,
+        @RequestParam(value = "ip", required = false) String ip,
+        @RequestParam(value = "userAgent", required = false) String userAgent,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken);
 
     @PostMapping("/api/internal/users/login-failure")

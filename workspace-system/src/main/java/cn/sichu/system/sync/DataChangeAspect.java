@@ -27,7 +27,8 @@ public class DataChangeAspect {
 
     private static final String[] EXCLUDED_PREFIXES = {
         "/api/auth", "/api/files", "/api/eap-tool-service", "/api/system/documents",
-        "/api/system/messages", "/api/system/notification-preferences"
+        "/api/system/messages", "/api/system/notification-preferences",
+        "/api/system/dashboard/access-events"
     };
 
     private final ApplicationEventPublisher eventPublisher;

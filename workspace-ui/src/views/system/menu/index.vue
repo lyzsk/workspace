@@ -31,13 +31,6 @@
             </div>
         </SearchCard>
 
-        <div class="app-scope-selector">
-            <span>所属应用</span>
-            <el-select v-model="currentAppCode" style="width: 240px" @change="appChanged">
-                <el-option v-for="app in appOptions" :key="app.code" :label="app.name" :value="app.code" />
-            </el-select>
-        </div>
-
         <TableCard searchable v-model:show-search="showSearch" @refresh="load">
             <template #actions>
                 <el-button
@@ -67,7 +60,8 @@
             <el-table-column prop="menuName" label="菜单名称" min-width="180" />
             <el-table-column label="类型" width="90">
                 <template #default="{ row }">
-                    <el-tag :type="typeTag(row.menuType)">
+                    <el-tag v-if="row.virtual" type="primary">应用</el-tag>
+                    <el-tag v-else :type="typeTag(row.menuType)">
                         {{ typeLabel(row.menuType) }}
                     </el-tag>
                 </template>
@@ -92,11 +86,13 @@
                         @click="openCreateChild(row)"
                     />
                     <ButtonTable
+                        v-if="!row.virtual"
                         v-permission="'sys:menu:update'"
                         type="edit"
                         @click="openEdit(row)"
                     />
                     <ButtonTable
+                        v-if="!row.virtual"
                         v-permission="'sys:menu:delete'"
                         type="delete"
                         @click="remove(row)"
@@ -113,6 +109,20 @@
             width="620px"
         >
             <el-form :model="form" label-width="100px">
+                <el-form-item label="所属应用">
+                    <el-select
+                        v-model="form.appCode"
+                        placeholder="选择菜单归属的应用"
+                        @change="form.parentId = '0'"
+                    >
+                        <el-option
+                            v-for="item in appOptions"
+                            :key="item.code"
+                            :label="item.name"
+                            :value="item.code"
+                        />
+                    </el-select>
+                </el-form-item>
                 <el-form-item label="上级菜单">
                     <el-tree-select
                         v-model="form.parentId"
@@ -193,7 +203,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import {
     createMenu,
     deleteMenu,
-    getMenuTree,
+    getAllMenuTree,
     updateMenu,
     type MenuForm,
 } from "@/api/system/menu";
@@ -203,9 +213,15 @@ import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
 import type { MenuNode } from "@/types/system";
 import { listApps, type AppInfo } from "@/api/system/app";
+import {
+    groupMenusByApp,
+    type MenuGroupNode,
+} from "@/utils/menuGrouping";
 import { useFormDraft } from "@/composables/useFormDraft";
 
 defineOptions({ name: "SystemMenu" });
+
+const MAIN_APP_CODE = "workspace";
 
 interface ParentOption {
     id: string;
@@ -217,9 +233,11 @@ const showSearch = ref(false);
 const loading = ref(false);
 const saving = ref(false);
 const menus = ref<MenuNode[]>([]);
-const currentAppCode = ref("workspace");
 const apps = ref<AppInfo[]>([]);
-const appOptions = computed(() => [{ code: "workspace", name: "工作台" }, ...apps.value]);
+const appOptions = computed(() => [
+    { code: MAIN_APP_CODE, name: "工作台" },
+    ...apps.value,
+]);
 const dialogVisible = ref(false);
 const editingId = ref<string | null>(null);
 const expandAll = ref(false);
@@ -256,12 +274,25 @@ const draft = useFormDraft({
     context: { editingId },
 });
 
+const displayMenus = computed(() =>
+    groupMenusByApp(menus.value, apps.value, MAIN_APP_CODE),
+);
+
+const currentAppMenus = computed<MenuNode[]>(() => {
+    if ((form.appCode || MAIN_APP_CODE) === MAIN_APP_CODE) {
+        return displayMenus.value.filter((node) => !node.virtual);
+    }
+    return displayMenus.value.find(
+        (node) => node.virtual && node.appCode === form.appCode,
+    )?.children ?? [];
+});
+
 const parentOptions = computed<ParentOption[]>(() => [
-    { id: "0", menuName: "根目录", children: filterParent(menus.value) },
+    { id: "0", menuName: "根目录", children: filterParent(currentAppMenus.value) },
 ]);
 
 const filteredMenus = computed(() =>
-    filterTree(menus.value, applied.menuName, applied.status),
+    filterTree(displayMenus.value, applied.menuName, applied.status),
 );
 
 function filterParent(nodes: MenuNode[]): ParentOption[] {
@@ -275,12 +306,12 @@ function filterParent(nodes: MenuNode[]): ParentOption[] {
 }
 
 function filterTree(
-    nodes: MenuNode[],
+    nodes: MenuGroupNode[],
     menuName: string,
     status?: number,
-): MenuNode[] {
+): MenuGroupNode[] {
     const name = menuName.trim();
-    const result: MenuNode[] = [];
+    const result: MenuGroupNode[] = [];
     for (const node of nodes) {
         const children = filterTree(node.children ?? [], name, status);
         const match =
@@ -319,10 +350,9 @@ function typeTag(type: string) {
 
 async function load() {
     const version = ++menuListVersion;
-    const appCode = currentAppCode.value;
     loading.value = true;
     try {
-        const result = await getMenuTree(true, appCode);
+        const result = await getAllMenuTree(true);
         if (version === menuListVersion) {
             menus.value = result;
         }
@@ -333,14 +363,9 @@ async function load() {
     }
 }
 
-function appChanged() {
-    dialogVisible.value = false;
-    load();
-}
-
 function resetForm() {
     Object.assign(form, {
-        appCode: currentAppCode.value,
+        appCode: MAIN_APP_CODE,
         menuCode: "",
         parentId: "0",
         menuName: "",
@@ -361,18 +386,22 @@ function openCreate() {
     dialogVisible.value = true;
 }
 
-function openCreateChild(row: MenuNode) {
+function openCreateChild(row: MenuGroupNode) {
     editingId.value = null;
     resetForm();
-    form.parentId = row.id;
-    form.menuType = row.menuType === "MENU" ? "BUTTON" : "MENU";
+    form.appCode = row.appCode || MAIN_APP_CODE;
+    form.parentId = row.virtual ? "0" : row.id;
+    form.menuType = !row.virtual && row.menuType === "MENU" ? "BUTTON" : "MENU";
     dialogVisible.value = true;
 }
 
-function openEdit(row: MenuNode) {
+function openEdit(row: MenuGroupNode) {
+    if (row.virtual) {
+        return;
+    }
     editingId.value = row.id;
     Object.assign(form, {
-        appCode: currentAppCode.value,
+        appCode: row.appCode || MAIN_APP_CODE,
         menuCode: row.menuCode,
         parentId: row.parentId,
         menuName: row.menuName,
@@ -393,8 +422,12 @@ async function save() {
         ElMessage.warning("菜单编码和名称不能为空");
         return;
     }
-    if (form.menuType === "MENU" && (!form.path || !form.component)) {
-        ElMessage.warning("菜单类型必须填写路由和组件");
+    if (form.menuType === "MENU" && !form.path) {
+        ElMessage.warning("菜单类型必须填写路由");
+        return;
+    }
+    if (form.menuType === "MENU" && form.appCode === MAIN_APP_CODE && !form.component) {
+        ElMessage.warning("主应用菜单必须填写组件");
         return;
     }
     saving.value = true;
@@ -413,7 +446,10 @@ async function save() {
     }
 }
 
-async function remove(row: MenuNode) {
+async function remove(row: MenuGroupNode) {
+    if (row.virtual) {
+        return;
+    }
     await ElMessageBox.confirm(`确定删除菜单「${row.menuName}」吗？`, "提示", {
         type: "warning",
     });
@@ -426,12 +462,3 @@ onMounted(async () => {
     await Promise.all([load(), listApps().then(items => (apps.value = items))]);
 });
 </script>
-
-<style scoped>
-.app-scope-selector {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 12px;
-}
-</style>

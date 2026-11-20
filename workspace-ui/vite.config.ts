@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
     const eapUiOrigin = env.VITE_EAP_UI_ORIGIN || "http://localhost:3006";
     const wsTestUiTarget = env.VITE_WS_TEST_UI_PROXY || "http://localhost:3007";
     const wsTestUiOrigin = env.VITE_WS_TEST_UI_ORIGIN || "http://localhost:3007";
+    const iesUiTarget =
+        env.VITE_IES_UI_PROXY || env.VITE_TEMPLATE_UI_PROXY || "http://localhost:3010";
+    const iesUiOrigin = env.VITE_IES_UI_ORIGIN || iesUiTarget;
 
     return {
         plugins: [vue()],
@@ -46,6 +49,20 @@ export default defineConfig(({ mode }) => {
                         });
                         proxy.on("proxyReqWs", (proxyReq) => {
                             proxyReq.setHeader("origin", wsTestUiOrigin);
+                        });
+                    },
+                },
+                "/ies": {
+                    target: iesUiTarget,
+                    changeOrigin: true,
+                    ws: true,
+                    xfwd: true,
+                    configure: (proxy) => {
+                        proxy.on("proxyReq", (proxyReq) => {
+                            proxyReq.setHeader("origin", iesUiOrigin);
+                        });
+                        proxy.on("proxyReqWs", (proxyReq) => {
+                            proxyReq.setHeader("origin", iesUiOrigin);
                         });
                     },
                 },

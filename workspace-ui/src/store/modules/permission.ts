@@ -8,6 +8,8 @@ import type { MenuNode } from "@/types/system";
 
 type ViewModule = () => Promise<{ default: Component }>;
 
+const APP_HOST_COMPONENT = "apps/detail/MicroFrontendHost";
+
 const viewModules = import.meta.glob<{ default: Component }>(
     "../../views/**/*.vue",
 );
@@ -64,8 +66,9 @@ export const usePermissionStore = defineStore("permission", () => {
     function buildRoutes(tree: MenuNode[]) {
         const routes: RouteRecordRaw[] = [];
         for (const menu of flattenMenus(tree)) {
+            const isAppHost = menu.component === APP_HOST_COMPONENT;
             if (
-                menu.menuType !== "MENU" ||
+                (!isAppHost && menu.menuType !== "MENU") ||
                 !menu.path ||
                 !menu.component ||
                 menu.path === "/dashboard"
@@ -79,23 +82,26 @@ export const usePermissionStore = defineStore("permission", () => {
             const meta = {
                 title: menu.menuName,
                 permission: menu.permission,
-                ...(menu.component === "apps/detail/MicroFrontendHost"
+                ...(isAppHost
                     ? {
                           appCode: menu.menuCode.replace(/^app:/, ""),
                           basePath: menu.path,
                       }
                     : {}),
             };
-            routes.push({
-                path: menu.path,
-                name: menu.menuCode,
-                component,
-                meta,
-            });
-            if (menu.component === "apps/detail/MicroFrontendHost") {
+            if (isAppHost) {
+                // 根路径与深路径必须是同一条路由记录，否则切换子页面会重建宿主组件。
                 routes.push({
                     path: `${menu.path}/:pathMatch(.*)*`,
-                    name: `${menu.menuCode}:deep`,
+                    alias: menu.path,
+                    name: menu.menuCode,
+                    component,
+                    meta,
+                });
+            } else {
+                routes.push({
+                    path: menu.path,
+                    name: menu.menuCode,
                     component,
                     meta,
                 });

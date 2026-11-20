@@ -20,7 +20,7 @@ workspace/
 └─ workspace-ui
 ```
 
-`workspace-admin` 已删除。`workspace-common` 是单一 Maven 模块，`core/security/redis` 是包，不是子模块。
+`workspace-common` 是单一 Maven 模块，`core/security/redis` 是包，不是子模块。
 
 ## 2. 认证协议
 

@@ -35,7 +35,8 @@ class LoginSessionStoreTest {
         LoginUser user = new LoginUser(source(), new java.util.ArrayList<>(List.of("ADMIN")),
             new java.util.ArrayList<>(List.of("app:list")));
         LoginSession session = new LoginSession("session-1", user, LocalDateTime.now(),
-            LocalDateTime.now(), LocalDateTime.now().plusHours(12), false, null);
+            LocalDateTime.now(), LocalDateTime.now().plusHours(12), false, null,
+            "127.0.0.1", "JUnit");
         final String[] json = new String[1];
         doAnswer(invocation -> {
             json[0] = invocation.getArgument(1);

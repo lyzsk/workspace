@@ -7,6 +7,9 @@ workspace:
     issuer: workspace
   auth:
     gateway-token: ${GATEWAY_INTERNAL_TOKEN:dev-only-gateway-token-change-me}
+  license:
+    enforce: ${LICENSE_ENFORCE:true}
+    fail-closed: ${LICENSE_FAIL_CLOSED:true}
 
 spring:
   application:
@@ -54,6 +57,11 @@ spring:
                     redis-rate-limiter.replenishRate: ${GATEWAY_LOGIN_RATE:5}
                     redis-rate-limiter.burstCapacity: ${GATEWAY_LOGIN_BURST:10}
                     redis-rate-limiter.requestedTokens: 1
+            - id: workspace-system-current-app-authorization
+              uri: lb://workspace-system
+              order: 5
+              predicates:
+                - Path=/api/auth/me/apps/**
             - id: workspace-auth
               uri: lb://workspace-auth
               order: 10

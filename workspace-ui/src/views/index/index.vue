@@ -2,20 +2,14 @@
     <div class="layout">
         <aside
             class="sidebar"
-            :class="{
-                collapsed: sidebarCollapsed && !isAppMode,
-                'app-rail': isAppMode,
-            }"
+            :class="{ collapsed: sidebarCollapsed }"
         >
             <div class="logo" @click="goHome">
                 <img src="/apple-touch-icon.png" alt="Workspace" />
-                <span v-if="!sidebarCollapsed && !isAppMode">{{
-                    t("app.name")
-                }}</span>
+                <span v-if="!sidebarCollapsed">{{ t("app.name") }}</span>
             </div>
             <el-scrollbar class="sidebar-scroll">
                 <el-menu
-                    v-if="!isAppMode"
                     :default-active="route.path"
                     router
                     class="menu el-menu-design"
@@ -38,46 +32,11 @@
                     </el-sub-menu>
                     <SidebarMenu :menus="permissionStore.menus" />
                 </el-menu>
-                <el-menu
-                    v-else
-                    :default-active="route.path"
-                    router
-                    class="menu el-menu-design"
-                    :collapse="true"
-                    :collapse-transition="false"
-                >
-                    <el-menu-item
-                        v-for="app in appEntries"
-                        :key="app.id"
-                        :index="app.path"
-                    >
-                        <div class="menu-icon flex-cc">
-                            <SvgIcon
-                                :icon="
-                                    app.icon?.startsWith('ri:')
-                                        ? app.icon
-                                        : 'ri:apps-line'
-                                "
-                            />
-                        </div>
-                        <template #title>
-                            <span class="menu-name">{{ app.name }}</span>
-                        </template>
-                    </el-menu-item>
-                </el-menu>
             </el-scrollbar>
         </aside>
 
         <div class="main">
             <header class="header" :class="{ 'app-header': isAppMode }">
-                    <div
-                        v-if="isAppMode"
-                        class="app-workspace-brand"
-                        @click="goHome"
-                    >
-                        <img src="/apple-touch-icon.png" alt="Workspace" />
-                        <span>{{ t("app.name") }}</span>
-                    </div>
                     <div class="header-left">
                         <button
                             class="icon-btn"
@@ -204,7 +163,7 @@
                 />
 
             <main class="content" :class="{ 'content-full': isAppMode }">
-                <router-view :key="dataRefreshKey" />
+                <router-view :key="isAppMode ? 'micro-app' : dataRefreshKey" />
             </main>
         </div>
     </div>
@@ -300,34 +259,6 @@ const breadcrumbs = computed<Crumb[]>(() => {
 
 const sidebarCollapsed = ref(false);
 const isAppMode = computed(() => String(route.name ?? "").startsWith("app:"));
-
-interface AppEntry {
-    id: string;
-    name: string;
-    path: string;
-    icon?: string;
-}
-
-const appEntries = computed<AppEntry[]>(() => {
-    const result: AppEntry[] = [];
-    const walk = (items: MenuNode[]) => {
-        for (const item of items) {
-            if (item.menuCode?.startsWith("app:") && item.path) {
-                result.push({
-                    id: item.id,
-                    name: item.menuName,
-                    path: item.path,
-                    icon: item.icon,
-                });
-            }
-            if (item.children?.length) {
-                walk(item.children);
-            }
-        }
-    };
-    walk(permissionStore.menus);
-    return result;
-});
 
 function goHome() {
     router.push("/dashboard");
@@ -516,31 +447,6 @@ function toggleTheme(event: MouseEvent) {
     padding: 0 20px;
     border-bottom: 1px solid var(--border);
     background: var(--panel-bg);
-}
-
-.app-workspace-brand {
-    display: flex;
-    flex: 0 0 230px;
-    align-items: center;
-    align-self: stretch;
-    gap: 10px;
-    margin-left: -20px;
-    padding-left: 20px;
-    border-right: 1px solid var(--border);
-    cursor: pointer;
-}
-
-.app-workspace-brand img {
-    width: 32px;
-    height: 32px;
-}
-
-.app-workspace-brand span {
-    overflow: hidden;
-    font-size: 16px;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .app-header .header-left {

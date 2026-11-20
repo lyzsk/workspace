@@ -7,7 +7,8 @@ package cn.sichu.system.auth.service;
  */
 public interface ILoginLogService {
 
-    void record(String username, boolean success, String message, Long userId);
+    void record(String username, boolean success, String message, Long userId, String ip,
+        String userAgent);
 
     int increaseLoginFailure(String username);
 

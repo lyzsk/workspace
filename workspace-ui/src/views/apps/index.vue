@@ -94,10 +94,10 @@
                 <el-form-item label="HTML 入口" required>
                     <el-input
                         v-model.trim="form.moduleEntry"
-                        placeholder="如 /ies/index.html"
+                        placeholder="开发如 http://localhost:3010/，生产如 /ies/"
                     />
                     <div class="form-help">
-                        填写可由 qiankun 加载的 HTML 文档地址，不填写 single-spa 的 JS/TS 模块地址。
+                        填写子应用入口页的 HTML 文档地址，须允许主应用跨域抓取；不得填写 JS 或 TS 模块地址。qiankun 3 仅接受 HTML 入口。
                     </div>
                 </el-form-item>
                 <el-form-item label="微前端样式入口">

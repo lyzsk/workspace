@@ -81,9 +81,11 @@ public class UserLoginInfoController {
         @RequestParam boolean success,
         @RequestParam String message,
         @RequestParam(required = false) Long userId,
+        @RequestParam(required = false) String ip,
+        @RequestParam(required = false) String userAgent,
         @RequestHeader("X-Workspace-Service-Token") String serviceToken) {
         tokenValidator.validate(serviceToken);
-        loginLogService.record(username, success, message, userId);
+        loginLogService.record(username, success, message, userId, ip, userAgent);
     }
 
     @PostMapping("/login-failure")

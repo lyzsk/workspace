@@ -28,6 +28,11 @@ spring:
                     redis-rate-limiter.replenishRate: ${GATEWAY_LOGIN_RATE:5}
                     redis-rate-limiter.burstCapacity: ${GATEWAY_LOGIN_BURST:10}
                     redis-rate-limiter.requestedTokens: 1
+            - id: workspace-system-current-app-authorization
+              uri: lb://workspace-system
+              order: 5
+              predicates:
+                - Path=/api/auth/me/apps/**
             - id: workspace-auth
               uri: lb://workspace-auth
               order: 10

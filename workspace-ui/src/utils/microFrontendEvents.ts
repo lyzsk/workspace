@@ -8,6 +8,7 @@ export type MicroFrontendEventType =
     | "host.locale.changed"
     | "host.session.expired"
     | "host.logout"
+    | "host.route.changed"
     | "app.ready"
     | "app.route.changed"
     | "app.theme.changed"

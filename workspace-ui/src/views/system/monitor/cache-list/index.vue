@@ -50,9 +50,9 @@
                 >
                     <el-table-column prop="key" label="缓存 Key" min-width="180" />
                     <el-table-column prop="value" label="缓存值" min-width="220" />
-                    <el-table-column label="更新时间" width="170" prop="updateTime" sortable="custom">
+                    <el-table-column label="剩余 TTL" width="120" prop="ttlSeconds">
                         <template #default="{ row }">
-                            {{ formatTime(row.updateTime) }}
+                            {{ formatTtl(row.ttlSeconds) }}
                         </template>
                     </el-table-column>
                     <el-table-column label="操作" width="90" fixed="right" align="center" class-name="action-cell">
@@ -101,7 +101,6 @@ import ButtonTable from "@/components/core/tables/button-table/index.vue";
 import SearchCard from "@/components/core/tables/search-card/index.vue";
 import Table from "@/components/core/tables/table/index.vue";
 import TableCard from "@/components/core/tables/table-card/index.vue";
-import { formatTime } from "@/utils/format";
 import { useFormDraft } from "@/composables/useFormDraft";
 
 defineOptions({ name: "MonitorCacheList" });
@@ -123,6 +122,19 @@ const draft = useFormDraft({
 const filteredRows = computed(() =>
     rows.value.filter((row) => !query.key || row.key.includes(query.key)),
 );
+
+function formatTtl(seconds: number) {
+    if (seconds === -1) {
+        return "永久";
+    }
+    if (seconds === -2) {
+        return "不存在";
+    }
+    if (seconds < 0) {
+        return "未知";
+    }
+    return `${seconds}s`;
+}
 
 async function load() {
     loading.value = true;
